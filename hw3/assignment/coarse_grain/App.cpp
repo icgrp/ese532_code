@@ -33,6 +33,17 @@ void Load_data(unsigned char * Data)
     Exit_with_error();
 }
 
+void pin_thread_to_cpu(std::thread& t, int cpu_num) {
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_num, &cpuset);
+  int rc =
+      pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
+  if (rc != 0) {
+    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  }
+}
+
 void Store_data(const char * Filename, unsigned char * Data, int Size)
 {
   FILE * File = fopen(Filename, "wb");
@@ -96,11 +107,18 @@ int main()
   {
     total_time.start();
 
-    time_scale.start();
     std::vector<std::thread> ths;
-    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 0, HEIGHT / 4 * 2));
-    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], HEIGHT / 4 * 2, HEIGHT));
-
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 0, 135, 0));
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 135, 270, 1));
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 270, 405, 2));
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 405, HEIGHT, 3));
+   
+    pin_thread_to_cpu(ths[0], 0);
+    pin_thread_to_cpu(ths[1], 4);
+    pin_thread_to_cpu(ths[2], 8); 
+    pin_thread_to_cpu(ths[3], 12);
+    
+    time_scale.start();
     for (auto& th : ths) {
         th.join();
     }
