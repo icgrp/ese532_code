@@ -10,7 +10,7 @@
 
 unsigned Coefficients[] = {2, 15, 62, 98, 62, 15, 2};
 
-void Filter_horizontal(const unsigned char * Input, unsigned char * Output)
+void Filter_horizontal(const unsigned char *Input, unsigned char *Output)
 {
   for (int Y = 0; Y < INPUT_HEIGHT; Y++)
     for (int X = 0; X < OUTPUT_WIDTH; X++)
@@ -22,7 +22,7 @@ void Filter_horizontal(const unsigned char * Input, unsigned char * Output)
     }
 }
 
-void Filter_vertical(const unsigned char * Input, unsigned char * Output)
+void Filter_vertical(const unsigned char *Input, unsigned char *Output)
 {
   for (int Y = 0; Y < OUTPUT_HEIGHT; Y++)
     for (int X = 0; X < OUTPUT_WIDTH; X++)
@@ -34,9 +34,9 @@ void Filter_vertical(const unsigned char * Input, unsigned char * Output)
     }
 }
 
-void Filter(const unsigned char * Input, unsigned char * Output)
+void Filter(const unsigned char *Input, unsigned char *Output)
 {
-  unsigned char * Temp = (unsigned char *)malloc(INPUT_HEIGHT * OUTPUT_WIDTH);
+  unsigned char *Temp = (unsigned char *)malloc(INPUT_HEIGHT * OUTPUT_WIDTH);
 
   Filter_horizontal(Input, Temp);
   Filter_vertical(Temp, Output);

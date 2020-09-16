@@ -16,11 +16,11 @@ void Exit_with_error(void)
   exit(EXIT_FAILURE);
 }
 
-void Load_data(unsigned char * Data)
+void Load_data(unsigned char *Data)
 {
   int Size = FRAMES * FRAME_SIZE;
 
-  FILE * File = fopen("../data/Input.bin", "rb");
+  FILE *File = fopen("../data/Input.bin", "rb");
   if (File == NULL)
     Exit_with_error();
 
@@ -31,9 +31,9 @@ void Load_data(unsigned char * Data)
     Exit_with_error();
 }
 
-void Store_data(const char * Filename, unsigned char * Data, int Size)
+void Store_data(const char *Filename, unsigned char *Data, int Size)
 {
-  FILE * File = fopen(Filename, "wb");
+  FILE *File = fopen(Filename, "wb");
   if (File == NULL)
     Exit_with_error();
 
@@ -44,10 +44,10 @@ void Store_data(const char * Filename, unsigned char * Data, int Size)
     Exit_with_error();
 }
 
-int Check_data(unsigned char * Data, int Size)
+int Check_data(unsigned char *Data, int Size)
 {
   unsigned char *Data_golden = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
-  FILE * File = fopen("../data/Golden.bin", "rb");
+  FILE *File = fopen("../data/Golden.bin", "rb");
   if (File == NULL)
     Exit_with_error();
 
@@ -57,10 +57,12 @@ int Check_data(unsigned char * Data, int Size)
   if (fclose(File) != 0)
     Exit_with_error();
 
-  for(int i=0; i<Size; i++){
-    if(Data_golden[i] != Data[i]){
+  for (int i = 0; i < Size; i++)
+  {
+    if (Data_golden[i] != Data[i])
+    {
       free(Data_golden);
-      return i+1;
+      return i + 1;
     }
   }
 
@@ -70,9 +72,9 @@ int Check_data(unsigned char * Data, int Size)
 
 int main()
 {
-  unsigned char * Input_data = (unsigned char *)malloc(FRAMES * FRAME_SIZE);
-  unsigned char * Temp_data[STAGES - 1];
-  unsigned char * Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
+  unsigned char *Input_data = (unsigned char *)malloc(FRAMES * FRAME_SIZE);
+  unsigned char *Temp_data[STAGES - 1];
+  unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
 
   for (int Stage = 0; Stage < STAGES - 1; Stage++)
   {
@@ -132,10 +134,13 @@ int main()
     free(Temp_data[i]);
 
   int check_result = Check_data(Output_data, Size);
-  if( check_result != 0){
-	  printf("You got errors in data %d\n", check_result);
-  }else{
-	  printf("Application completed successfully.\n");
+  if (check_result != 0)
+  {
+    printf("You got errors in data %d\n", check_result);
+  }
+  else
+  {
+    printf("Application completed successfully.\n");
   }
 
   free(Output_data);

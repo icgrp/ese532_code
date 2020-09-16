@@ -1,7 +1,7 @@
 #define HEIGHT (264)
 #define WIDTH (474)
 
-void Differentiate(const unsigned char * Input, unsigned char * Output)
+void Differentiate(const unsigned char *Input, unsigned char *Output)
 {
   for (int Y = 0; Y < HEIGHT; Y++)
     for (int X = 0; X < WIDTH; X++)
