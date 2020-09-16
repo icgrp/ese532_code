@@ -4,10 +4,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <thread>
+#include <vector>
 
-#define FRAME_SIZE (960 * 540)
+#define FRAME_SIZE (INPUT_WIDTH_SCALE * INPUT_HEIGHT_SCALE)
 #define FRAMES (100)
-#define STAGES (4)
+#define STAGES (5)
 #define MAX_OUTPUT_SIZE (5000 * 1024)
 
 void Exit_with_error(void)
@@ -29,6 +31,19 @@ void Load_data(unsigned char *Data)
 
   if (fclose(File) != 0)
     Exit_with_error();
+}
+
+void pin_thread_to_cpu(std::thread &t, int cpu_num)
+{
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(cpu_num, &cpuset);
+  int rc =
+      pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
+  if (rc != 0)
+  {
+    std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+  }
 }
 
 void Store_data(const char *Filename, unsigned char *Data, int Size)
@@ -70,11 +85,37 @@ int Check_data(unsigned char *Data, int Size)
   return 0;
 }
 
+void core_0_process(unsigned char *Input_data_core_0,
+                    unsigned char *Temp_data,
+                    unsigned char *Output_data,
+                    int& Size) {
+  Filter_core_0(Input_data_core_0, Temp_data[2]);
+  Differentiate(Temp_data[2], Temp_data[3]);
+  Size = Compress(Temp_data[3], Output_data);
+}
+
+void core_1_process(int& Frame,
+                    unsigned char *Input_data,
+                    unsigned char *Temp_data) {
+  Scale(Input_data + Frame * FRAME_SIZE, Temp_data[0]);
+  Filter_core_1(Temp_data[0], Temp_data[1]);
+}
+
 int main()
 {
   unsigned char *Input_data = (unsigned char *)malloc(FRAMES * FRAME_SIZE);
   unsigned char *Temp_data[STAGES - 1];
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
+  unsigned char *Input_data_core_0 = (unsigned char *)malloc(FRAME_SIZE);
+  
+  if (Input_data == NULL)
+    Exit_with_error();
+  
+  if (Output_data == NULL)
+    Exit_with_error();
+
+  if (Input_data_core_0 == NULL)
+    Exit_with_error();
 
   for (int Stage = 0; Stage < STAGES - 1; Stage++)
   {
@@ -85,53 +126,44 @@ int main()
 
   Load_data(Input_data);
 
-  stopwatch time_scale;
-  stopwatch time_filter;
-  stopwatch time_differentiate;
-  stopwatch time_compress;
   stopwatch total_time;
-
   int Size = 0;
-  for (int Frame = 0; Frame < FRAMES; Frame++)
+  int Frame;
+  std::thread core_0_thread(&core_0_process, Input_data_core_0,
+                                             Temp_data,
+                                             Output_data,
+                                             Size);
+  std::thread core_1_thread(&core_1_process, Frame,
+                                             Input_data,
+                                             Temp_data);
+  pin_thread_to_cpu(core_0_thread, 0);
+  pin_thread_to_cpu(core_1_thread, 1);
+
+  total_time.start();
+  for (Frame = 0; Frame < FRAMES; Frame++)
   {
-    total_time.start();
+    if (Frame > 0)
+    {
+      core_0_thread.join();
+    }
 
-    time_scale.start();
-    Scale(Input_data + Frame * FRAME_SIZE, Temp_data[0]);
-    time_scale.stop();
+    if (Frame < FRAMES)
+      core_1_thread.join();
 
-    time_filter.start();
-    Filter(Temp_data[0], Temp_data[1]);
-    time_filter.stop();
-
-    time_differentiate.start();
-    Differentiate(Temp_data[1], Temp_data[2]);
-    time_differentiate.stop();
-
-    time_compress.start();
-    Size = Compress(Temp_data[2], Output_data);
-    time_compress.stop();
-
-    total_time.stop();
+    unsigned char * Temp = Temp_data[1];
+    Temp_data[1] = Input_data_core_0;
+    Input_data_core_0 = Temp;
   }
-  std::cout << "Total latency of Scale is: " << time_scale.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Filter is: " << time_filter.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Differentiate is: " << time_differentiate.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Compress is: " << time_compress.latency() << " ns." << std::endl;
+  total_time.stop();
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
-  std::cout << "---------------------------------------------------------------" << std::endl;
-  std::cout << "Average latency of Scale per loop iteration is: " << time_scale.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Filter per loop iteration is: " << time_filter.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Differentiate per loop iteration is: " << time_differentiate.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Compress per loop iteration is: " << time_compress.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ns." << std::endl;
-
+  
   Store_data("Output.bin", Output_data, Size);
 
   free(Input_data);
 
   for (int i = 0; i < STAGES - 1; i++)
     free(Temp_data[i]);
+  free(Input_data_core_0);
 
   int check_result = Check_data(Output_data, Size);
   if (check_result != 0)

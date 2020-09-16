@@ -7,7 +7,7 @@
 #include <thread>
 #include <vector>
 
-#define FRAME_SIZE (WIDTH * HEIGHT)
+#define FRAME_SIZE (INPUT_WIDTH_SCALE * INPUT_HEIGHT_SCALE)
 #define FRAMES (100)
 #define STAGES (4)
 #define MAX_OUTPUT_SIZE (5000 * 1024)
@@ -91,6 +91,12 @@ int main()
   unsigned char *Temp_data[STAGES - 1];
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
 
+  if (Input_data == NULL)
+    Exit_with_error();
+  
+  if (Output_data == NULL)
+    Exit_with_error();
+
   for (int Stage = 0; Stage < STAGES - 1; Stage++)
   {
     Temp_data[Stage] = (unsigned char *)malloc(FRAME_SIZE);
@@ -112,8 +118,8 @@ int main()
     total_time.start();
 
     std::vector<std::thread> ths;
-    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 0, HEIGHT / 2));
-    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], HEIGHT / 2, HEIGHT));
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 0, INPUT_HEIGHT_SCALE / 2));
+    ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], INPUT_HEIGHT_SCALE / 2, INPUT_HEIGHT_SCALE));
 
     pin_thread_to_cpu(ths[0], 0);
     pin_thread_to_cpu(ths[1], 1);
