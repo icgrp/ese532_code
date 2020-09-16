@@ -33,8 +33,12 @@ void Load_data(unsigned char *Data)
     Exit_with_error();
 }
 
+// from https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
 void pin_thread_to_cpu(std::thread &t, int cpu_num)
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__) || defined(__APPLE__)
+  return;
+#else
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
   CPU_SET(cpu_num, &cpuset);
@@ -44,6 +48,7 @@ void pin_thread_to_cpu(std::thread &t, int cpu_num)
   {
     std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
   }
+#endif
 }
 
 void Store_data(const char *Filename, unsigned char *Data, int Size)
@@ -93,7 +98,7 @@ int main()
 
   if (Input_data == NULL)
     Exit_with_error();
-  
+
   if (Output_data == NULL)
     Exit_with_error();
 
@@ -106,17 +111,11 @@ int main()
 
   Load_data(Input_data);
 
-  stopwatch time_scale;
-  stopwatch time_filter;
-  stopwatch time_differentiate;
-  stopwatch time_compress;
   stopwatch total_time;
-
   int Size = 0;
+  total_time.start();
   for (int Frame = 0; Frame < FRAMES; Frame++)
   {
-    total_time.start();
-
     std::vector<std::thread> ths;
     ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], 0, INPUT_HEIGHT_SCALE / 2));
     ths.push_back(std::thread(&Scale, Input_data + Frame * FRAME_SIZE, Temp_data[0], INPUT_HEIGHT_SCALE / 2, INPUT_HEIGHT_SCALE));
@@ -124,38 +123,17 @@ int main()
     pin_thread_to_cpu(ths[0], 0);
     pin_thread_to_cpu(ths[1], 1);
 
-    time_scale.start();
     for (auto &th : ths)
     {
       th.join();
     }
-    time_scale.stop();
 
-    time_filter.start();
     Filter(Temp_data[0], Temp_data[1]);
-    time_filter.stop();
-
-    time_differentiate.start();
     Differentiate(Temp_data[1], Temp_data[2]);
-    time_differentiate.stop();
-
-    time_compress.start();
     Size = Compress(Temp_data[2], Output_data);
-    time_compress.stop();
-
-    total_time.stop();
   }
-  std::cout << "Total latency of Scale is: " << time_scale.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Filter is: " << time_filter.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Differentiate is: " << time_differentiate.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Compress is: " << time_compress.latency() << " ns." << std::endl;
+  total_time.stop();
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
-  std::cout << "---------------------------------------------------------------" << std::endl;
-  std::cout << "Average latency of Scale per loop iteration is: " << time_scale.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Filter per loop iteration is: " << time_filter.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Differentiate per loop iteration is: " << time_differentiate.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Compress per loop iteration is: " << time_compress.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ns." << std::endl;
 
   Store_data("Output.bin", Output_data, Size);
 

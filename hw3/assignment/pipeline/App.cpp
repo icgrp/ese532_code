@@ -33,8 +33,12 @@ void Load_data(unsigned char *Data)
     Exit_with_error();
 }
 
+// from https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
 void pin_thread_to_cpu(std::thread &t, int cpu_num)
 {
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__) || defined(__APPLE__)
+  return;
+#else
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
   CPU_SET(cpu_num, &cpuset);
@@ -44,6 +48,7 @@ void pin_thread_to_cpu(std::thread &t, int cpu_num)
   {
     std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
   }
+#endif
 }
 
 void Store_data(const char *Filename, unsigned char *Data, int Size)
@@ -85,9 +90,10 @@ int Check_data(unsigned char *Data, int Size)
   return 0;
 }
 
-void core_0_process(int& Size, unsigned char *Input_data_core_0,
+void core_0_process(int &Size, unsigned char *Input_data_core_0,
                     unsigned char **Temp_data,
-                    unsigned char *Output_data) {
+                    unsigned char *Output_data)
+{
   Filter_core_0(Input_data_core_0, Temp_data[2]);
   Differentiate(Temp_data[2], Temp_data[3]);
   Size = Compress(Temp_data[3], Output_data);
@@ -95,7 +101,8 @@ void core_0_process(int& Size, unsigned char *Input_data_core_0,
 
 void core_1_process(int Frame,
                     unsigned char *Input_data,
-                    unsigned char **Temp_data) {
+                    unsigned char **Temp_data)
+{
   Scale(Input_data + Frame * FRAME_SIZE, Temp_data[0]);
   Filter_core_1(Temp_data[0], Temp_data[1]);
 }
@@ -106,10 +113,10 @@ int main()
   unsigned char *Temp_data[STAGES - 1];
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
   unsigned char *Input_data_core_0 = (unsigned char *)malloc(FRAME_SIZE);
-  
+
   if (Input_data == NULL)
     Exit_with_error();
-  
+
   if (Output_data == NULL)
     Exit_with_error();
 
@@ -133,37 +140,39 @@ int main()
   total_time.start();
   for (Frame = 0; Frame <= FRAMES; Frame++)
   {
-    if (Frame < FRAMES) {
+    if (Frame < FRAMES)
+    {
 
-	    core_1_thread = std::thread(&core_1_process, Frame,
-                                             Input_data,
-                                             Temp_data);
-	    pin_thread_to_cpu(core_1_thread, 1);
+      core_1_thread = std::thread(&core_1_process, Frame,
+                                  Input_data,
+                                  Temp_data);
+      pin_thread_to_cpu(core_1_thread, 1);
     }
 
     if (Frame > 0)
     {
-	    core_0_thread = std::thread(&core_0_process,
-			    		     std::ref(Size),
-			    		     Input_data_core_0,
-					     Temp_data,
-					     Output_data);
-    pin_thread_to_cpu(core_0_thread, 0);
-	    core_0_thread.join();
+      core_0_thread = std::thread(&core_0_process,
+                                  std::ref(Size),
+                                  Input_data_core_0,
+                                  Temp_data,
+                                  Output_data);
+      pin_thread_to_cpu(core_0_thread, 0);
+      core_0_thread.join();
     }
 
-    if (Frame < FRAMES) {
+    if (Frame < FRAMES)
+    {
       core_1_thread.join();
     }
 
-    unsigned char * Temp = Temp_data[1];
+    unsigned char *Temp = Temp_data[1];
     Temp_data[1] = Input_data_core_0;
     Input_data_core_0 = Temp;
   }
 
   total_time.stop();
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
-  
+
   Store_data("Output.bin", Output_data, Size);
 
   free(Input_data);

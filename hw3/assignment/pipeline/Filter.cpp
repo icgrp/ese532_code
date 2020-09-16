@@ -8,7 +8,7 @@
 #define OUTPUT_HEIGHT (INPUT_HEIGHT - (FILTER_LENGTH - 1))
 #define OUTPUT_WIDTH (INPUT_WIDTH - (FILTER_LENGTH - 1))
 
-#define PIPELINE_PAR (500)
+#define PIPELINE_PAR (0)
 
 unsigned Coefficients[] = {2, 15, 62, 98, 62, 15, 2};
 
@@ -74,4 +74,3 @@ void Filter_core_1(const unsigned char *Input, unsigned char *Output)
 
   free(Temp);
 }
-
