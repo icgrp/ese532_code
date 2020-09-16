@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <iostream>
 
-#define FRAME_SIZE (960 * 540)
-#define FRAMES (10)
+#define FRAME_SIZE (WIDTH * HEIGHT)
+#define FRAMES (100)
 #define STAGES (4)
-#define MAX_OUTPUT_SIZE (500 * 1024)
+#define MAX_OUTPUT_SIZE (5000 * 1024)
 
 void Exit_with_error(void)
 {

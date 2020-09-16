@@ -69,7 +69,7 @@ $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM) -rf perf* Output.bin *.txt *.out *.o *~ $(MAIN)
+	$(RM) -rf perf* *.bin *.txt *.out *.o *~ $(MAIN)
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
