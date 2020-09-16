@@ -20,7 +20,7 @@ void Load_data(unsigned char *Data)
 {
   int Size = FRAMES * FRAME_SIZE;
 
-  FILE *File = fopen("../data/Input.bin", "rb");
+  FILE *File = fopen("../../data/Input.bin", "rb");
   if (File == NULL)
     Exit_with_error();
 
@@ -47,7 +47,7 @@ void Store_data(const char *Filename, unsigned char *Data, int Size)
 int Check_data(unsigned char *Data, int Size)
 {
   unsigned char *Data_golden = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
-  FILE *File = fopen("../data/Golden.bin", "rb");
+  FILE *File = fopen("../../data/Golden.bin", "rb");
   if (File == NULL)
     Exit_with_error();
 
