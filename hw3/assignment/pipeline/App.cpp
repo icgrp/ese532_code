@@ -85,18 +85,17 @@ int Check_data(unsigned char *Data, int Size)
   return 0;
 }
 
-void core_0_process(unsigned char *Input_data_core_0,
-                    unsigned char *Temp_data,
-                    unsigned char *Output_data,
-                    int& Size) {
+void core_0_process(int& Size, unsigned char *Input_data_core_0,
+                    unsigned char **Temp_data,
+                    unsigned char *Output_data) {
   Filter_core_0(Input_data_core_0, Temp_data[2]);
   Differentiate(Temp_data[2], Temp_data[3]);
   Size = Compress(Temp_data[3], Output_data);
 }
 
-void core_1_process(int& Frame,
+void core_1_process(int Frame,
                     unsigned char *Input_data,
-                    unsigned char *Temp_data) {
+                    unsigned char **Temp_data) {
   Scale(Input_data + Frame * FRAME_SIZE, Temp_data[0]);
   Filter_core_1(Temp_data[0], Temp_data[1]);
 }
@@ -129,31 +128,39 @@ int main()
   stopwatch total_time;
   int Size = 0;
   int Frame;
-  std::thread core_0_thread(&core_0_process, Input_data_core_0,
-                                             Temp_data,
-                                             Output_data,
-                                             Size);
-  std::thread core_1_thread(&core_1_process, Frame,
+  std::thread core_1_thread;
+  std::thread core_0_thread;
+  total_time.start();
+  for (Frame = 0; Frame <= FRAMES; Frame++)
+  {
+    if (Frame < FRAMES) {
+
+	    core_1_thread = std::thread(&core_1_process, Frame,
                                              Input_data,
                                              Temp_data);
-  pin_thread_to_cpu(core_0_thread, 0);
-  pin_thread_to_cpu(core_1_thread, 1);
-
-  total_time.start();
-  for (Frame = 0; Frame < FRAMES; Frame++)
-  {
-    if (Frame > 0)
-    {
-      core_0_thread.join();
+	    pin_thread_to_cpu(core_1_thread, 1);
     }
 
-    if (Frame < FRAMES)
+    if (Frame > 0)
+    {
+	    core_0_thread = std::thread(&core_0_process,
+			    		     std::ref(Size),
+			    		     Input_data_core_0,
+					     Temp_data,
+					     Output_data);
+    pin_thread_to_cpu(core_0_thread, 0);
+	    core_0_thread.join();
+    }
+
+    if (Frame < FRAMES) {
       core_1_thread.join();
+    }
 
     unsigned char * Temp = Temp_data[1];
     Temp_data[1] = Input_data_core_0;
     Input_data_core_0 = Temp;
   }
+
   total_time.stop();
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
   

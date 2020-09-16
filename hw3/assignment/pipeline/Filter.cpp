@@ -8,7 +8,7 @@
 #define OUTPUT_HEIGHT (INPUT_HEIGHT - (FILTER_LENGTH - 1))
 #define OUTPUT_WIDTH (INPUT_WIDTH - (FILTER_LENGTH - 1))
 
-#define PIPELINE_PAR (0)
+#define PIPELINE_PAR (500)
 
 unsigned Coefficients[] = {2, 15, 62, 98, 62, 15, 2};
 
@@ -60,14 +60,14 @@ void Filter_vertical_core0(const unsigned char *Input, unsigned char *Output)
     }
 }
 
-void Filter_core_0(const unsigned char * Input, unsigned char * Output)
+void Filter_core_0(const unsigned char *Input, unsigned char *Output)
 {
   Filter_vertical_core0(Input, Output);
 }
 
 void Filter_core_1(const unsigned char *Input, unsigned char *Output)
 {
-  unsigned char *Temp = malloc(INPUT_HEIGHT * OUTPUT_WIDTH);
+  unsigned char *Temp = (unsigned char *)malloc(INPUT_HEIGHT * OUTPUT_WIDTH);
 
   Filter_horizontal(Input, Temp);
   Filter_vertical_core1(Temp, Output);
