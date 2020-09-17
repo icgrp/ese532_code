@@ -101,6 +101,7 @@ void core_0_process(int &Size,
 
 int main()
 {
+  pin_main_thread_to_cpu0();
   unsigned char *Input_data = (unsigned char *)malloc(FRAMES * FRAME_SIZE);
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
 

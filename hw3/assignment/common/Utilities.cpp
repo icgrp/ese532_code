@@ -39,6 +39,25 @@ void pin_thread_to_cpu(std::thread &t, int cpu_num)
 #endif
 }
 
+void pin_main_thread_to_cpu0()
+{
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__) || defined(__APPLE__)
+    return;
+#else
+    pthread_t thread;
+    thread = pthread_self();
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(0, &cpuset);
+    int rc =
+        pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+    if (rc != 0)
+    {
+        std::cerr << "Error calling pthread_setaffinity_np: " << rc << "\n";
+    }
+#endif
+}
+
 void Store_data(const char *Filename, unsigned char *Data, unsigned int Size)
 {
     FILE *File = fopen(Filename, "wb");
@@ -66,7 +85,7 @@ void Check_data(unsigned char *Data, unsigned int Size)
     if (fclose(File) != 0)
         Exit_with_error();
 
-    for (int i = 0; i < Size; i++)
+    for (unsigned int i = 0; i < Size; i++)
     {
         if (Data_golden[i] != Data[i])
         {
