@@ -1,3 +1,6 @@
+#ifndef SRC_STOPWATCH_
+#define SRC_STOPWATCH_
+
 #include <chrono>
 
 class stopwatch
@@ -38,3 +41,5 @@ public:
     return (total_time / calls);
   };
 };
+
+#endif
