@@ -117,11 +117,6 @@ int main()
     aux[i] = (unsigned char *)temp_data + i * FRAME_SIZE;
   }
 
-  for (int Stage = 0; Stage < STAGES - 1; Stage++)
-  {
-    Temp_data[Stage] = temp_data[Stage];
-  }
-
   Load_data(Input_data);
 
   stopwatch total_time;
@@ -136,11 +131,10 @@ int main()
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
 
   Store_data("Output.bin", Output_data, Size);
-
-  free(Input_data);
-
   Check_data(Output_data, Size);
 
+  free(Input_data);
   free(Output_data);
+
   return EXIT_SUCCESS;
 }

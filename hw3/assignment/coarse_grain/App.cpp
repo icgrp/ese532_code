@@ -48,14 +48,12 @@ int main()
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
 
   Store_data("Output.bin", Output_data, Size);
-
-  free(Input_data);
+  Check_data(Output_data, Size);
 
   for (int i = 0; i < STAGES - 1; i++)
     free(Temp_data[i]);
-
-  Check_data(Output_data, Size);
-
+  free(Input_data);
   free(Output_data);
+
   return EXIT_SUCCESS;
 }
