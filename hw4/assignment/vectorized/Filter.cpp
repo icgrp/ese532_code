@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "App.h"
 
 #define INPUT_HEIGHT (270)
 #define INPUT_WIDTH (480)
