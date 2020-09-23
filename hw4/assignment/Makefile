@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++11 -Wall -O3 -DNDEBUG -pthread
 LDFLAGS = -lpthread -pthread
 INCLUDES = -I./common
 
-EXECUTABLES = app app_vec
+EXECUTABLES = baseline vectorized
 SRC = $(wildcard src/*.cpp common/*.cpp)
 
 .PHONY: clean
@@ -11,10 +11,10 @@ SRC = $(wildcard src/*.cpp common/*.cpp)
 all: $(EXECUTABLES)
 	@echo $(EXECUTABLES) compiled!
 
-app: $(SRC)
+baseline: $(SRC)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
-app_vec: $(SRC)
+vectorized: $(SRC)
 	$(CXX) -DVECTORIZED $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
 clean:
