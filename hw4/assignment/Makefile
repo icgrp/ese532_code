@@ -1,10 +1,11 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -O3 -DNDEBUG -pthread
+CXXFLAGS = -std=c++11 -Wall -O3 -mcpu=native -fno-tree-vectorize -DNDEBUG -pthread
 LDFLAGS = -lpthread -pthread
 INCLUDES = -I./common
 
 EXECUTABLES = baseline vectorized
 SRC = $(wildcard src/*.cpp common/*.cpp)
+EXAMPLE_SRC = $(wildcard neon_example/*.cpp common/*.cpp)
 
 .PHONY: clean
 
@@ -16,6 +17,9 @@ baseline: $(SRC)
 
 vectorized: $(SRC)
 	$(CXX) -DVECTORIZED $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
+
+example: $(EXAMPLE_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
 clean:
 	$(RM) -rf perf* *.bin *.txt *.dSYM *.out *.o *~ $(EXECUTABLES)
