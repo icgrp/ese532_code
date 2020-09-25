@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++11 -Wall -O3 -mcpu=native -fno-tree-vectorize -DNDEBUG -pthre
 LDFLAGS = -lpthread -pthread
 INCLUDES = -I./common
 
-EXECUTABLES = baseline vectorized example
+EXECUTABLES = baseline neon_filter example
 SRC = $(wildcard src/*.cpp common/*.cpp)
 EXAMPLE_SRC = $(wildcard neon_example/*.cpp common/*.cpp)
 
@@ -15,7 +15,7 @@ all: $(EXECUTABLES)
 baseline: $(SRC)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
-vectorized: $(SRC)
+neon_filter: $(SRC)
 	$(CXX) -DVECTORIZED $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
 example: $(EXAMPLE_SRC)

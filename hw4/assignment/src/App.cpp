@@ -1,6 +1,6 @@
 #include "App.h"
 
-#define STAGES (4)
+#define STAGES (5)
 
 int main()
 {
@@ -18,7 +18,8 @@ int main()
   Load_data(Input_data);
 
   stopwatch time_scale;
-  stopwatch time_filter;
+  stopwatch time_filter_horizontal;
+  stopwatch time_filter_vertical;
   stopwatch time_differentiate;
   stopwatch time_compress;
   stopwatch total_time;
@@ -32,28 +33,34 @@ int main()
     Scale(Input_data + Frame * FRAME_SIZE, Temp_data[0]);
     time_scale.stop();
 
-    time_filter.start();
-    Filter(Temp_data[0], Temp_data[1]);
-    time_filter.stop();
+    time_filter_horizontal.start();
+    Filter_horizontal(Temp_data[0], Temp_data[1]);
+    time_filter_horizontal.stop();
+
+    time_filter_vertical.start();
+    Filter_vertical(Temp_data[1], Temp_data[2]);
+    time_filter_vertical.stop();
 
     time_differentiate.start();
-    Differentiate(Temp_data[1], Temp_data[2]);
+    Differentiate(Temp_data[2], Temp_data[3]);
     time_differentiate.stop();
 
     time_compress.start();
-    Size = Compress(Temp_data[2], Output_data);
+    Size = Compress(Temp_data[3], Output_data);
     time_compress.stop();
 
     total_time.stop();
   }
   std::cout << "Total latency of Scale is: " << time_scale.latency() << " ns." << std::endl;
-  std::cout << "Total latency of Filter is: " << time_filter.latency() << " ns." << std::endl;
+  std::cout << "Total latency of Filter_horizontal is: " << time_filter_horizontal.latency() << " ns." << std::endl;
+  std::cout << "Total latency of Filter_vertical is: " << time_filter_vertical.latency() << " ns." << std::endl;
   std::cout << "Total latency of Differentiate is: " << time_differentiate.latency() << " ns." << std::endl;
   std::cout << "Total latency of Compress is: " << time_compress.latency() << " ns." << std::endl;
   std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
   std::cout << "---------------------------------------------------------------" << std::endl;
   std::cout << "Average latency of Scale per loop iteration is: " << time_scale.avg_latency() << " ns." << std::endl;
-  std::cout << "Average latency of Filter per loop iteration is: " << time_filter.avg_latency() << " ns." << std::endl;
+  std::cout << "Average latency of Filter_horizontal per loop iteration is: " << time_filter_horizontal.avg_latency() << " ns." << std::endl;
+  std::cout << "Average latency of Filter_vertical per loop iteration is: " << time_filter_vertical.avg_latency() << " ns." << std::endl;
   std::cout << "Average latency of Differentiate per loop iteration is: " << time_differentiate.avg_latency() << " ns." << std::endl;
   std::cout << "Average latency of Compress per loop iteration is: " << time_compress.avg_latency() << " ns." << std::endl;
   std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ns." << std::endl;
