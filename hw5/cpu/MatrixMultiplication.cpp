@@ -1,31 +1,4 @@
-#include <iostream>
-#include <cstdlib>
-#include "Stopwatch.h"
-#include "MatrixMultiplication.h"
-
-matrix_type * Create_matrix(void)
-{
-  matrix_type * Matrix = static_cast<matrix_type *>(
-      malloc(MATRIX_WIDTH * MATRIX_WIDTH * sizeof(matrix_type)));
-  if (Matrix == NULL)
-  {
-    std::cerr << "Could not allocate matrix." << std::endl;
-    exit (EXIT_FAILURE);
-  }
-  return Matrix;
-}
-
-void Destroy_matrix(matrix_type * Matrix)
-{
-  free(Matrix);
-}
-
-void Randomize_matrix(matrix_type * Matrix)
-{
-  for (int Y = 0; Y < MATRIX_WIDTH; Y++)
-    for (int X = 0; X < MATRIX_WIDTH; X++)
-      Matrix[Y * MATRIX_WIDTH + X] = rand();
-}
+#include "Utilities.h"
 
 void Multiply_SW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
                  const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
