@@ -6,6 +6,9 @@ extern "C"
                    const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
                    matrix_type Output[MATRIX_WIDTH * MATRIX_WIDTH])
   {
+#pragma HLS INTERFACE m_axi port=Input_1 bundle=aximm1
+#pragma HLS INTERFACE m_axi port=Input_2 bundle=aximm2
+#pragma HLS INTERFACE m_axi port=Output bundle=aximm1
     matrix_type Buffer_1[MATRIX_WIDTH][MATRIX_WIDTH];
     matrix_type Buffer_2[MATRIX_WIDTH][MATRIX_WIDTH];
 

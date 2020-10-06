@@ -109,11 +109,11 @@ int main(int argc, char** argv)
 // ------------------------------------------------------------------------------------
 // Step 4: Check Results and Release Allocated Resources
 // ------------------------------------------------------------------------------------
-    matrix_type *out1 = Create_matrix();
-    Multiply_SW(in1, in2, out1);
-    bool match = Compare_matrices(Output_SW, Output_HW);
+    matrix_type *out_sw = Create_matrix();
+    Multiply_SW(in1, in2, out_sw);
+    bool match = Compare_matrices(out_sw, out);
 
-    Destroy_matrix(out1);
+    Destroy_matrix(out_sw);
     delete[] fileBuf;
 
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl; 

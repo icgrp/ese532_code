@@ -34,7 +34,7 @@ KRNL_COMPILE_OPTS := -t $(TARGET) --config design.cfg
 KRNL_LINK_OPTS := -t $(TARGET) --config design.cfg
 
 baseline: cpu/MatrixMultiplication.cpp common/Utilities.cpp
-	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2)
+	g++ $(CXXFLAGS) $^ -o $@ $(CXXFLAGS2)
 
 fpga:  $(XO) $(XCLBIN) $(HOST_EXE) emconfig
 
@@ -50,7 +50,7 @@ $(XCLBIN): $(XO)
 
 # Building Host
 $(HOST_EXE): fpga/Host.cpp common/Utilities.cpp
-	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2)
+	g++ $(CXXFLAGS) $^ -o $@ $(CXXFLAGS2)
 
 .PHONY: emconfig
 emconfig:
