@@ -27,10 +27,11 @@ PLATFORM := xilinx_aws-vu9p-f1_shell-v04261818_201920_2
 HOST_EXE := host
 XO := mmult.xo
 XCLBIN := mmult.xclbin
-S3_BUCKET_NAME := ese532_$(shell aws sts get-caller-identity | grep "Account" | tr -dc '0-9')
-S3_DCP_DIR := vitis_dcps
-S3_LOG_DIR := vitis_logs
-EMAIL := 
+S3_BUCKET_NAME := ese532-$(shell aws sts get-caller-identity | grep "Account" | tr -dc '0-9')
+S3_DCP_DIR := vitis-dcps
+S3_LOG_DIR := vitis-logs
+EMAIL :=
+SHELL := /bin/bash
 
 # Host building global settings
 CXXFLAGS := -I./common -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -Wall -O3 -g -std=c++11 -L$(XILINX_XRT)/lib/ -lpthread -lrt -lstdc++
@@ -47,7 +48,7 @@ baseline: cpu/MatrixMultiplication.cpp common/Utilities.cpp
 afi: afigen
 	source $(AWS_FPGA_REPO_DIR)/hdk_setup.sh
 	pip install --user --upgrade boto3
-	wait_for_afi.py --afi $(cat *afi_id.txt | sed -n '2p' | tr -d '",' | sed 's/.*://') --notify --email $(EMAIL) &
+	wait_for_afi.py --afi $(shell cat *afi_id.txt | sed -n '2p' | tr -d '",' | sed 's/.*://') --notify --email $(EMAIL) &
 
 .PHONY: afigen
 afigen: fpga
