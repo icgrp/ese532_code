@@ -70,7 +70,7 @@ xclbin: $(XO) $(XCLBIN)
 
 # Building kernel
 $(XO): fpga/hls/MatrixMultiplication.cpp
-	v++ $(KRNL_COMPILE_OPTS) -c -k Multiply_HW -I./common -o'$@' '$<'
+	v++ $(KRNL_COMPILE_OPTS) -c -k Multiply_HW -I./common -I./fpga/hls/ -o'$@' '$<'
 $(XCLBIN): $(XO)
 	v++ $(KRNL_LINK_OPTS) -l -o'$@' $(+)
 
