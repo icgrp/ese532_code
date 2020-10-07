@@ -84,4 +84,4 @@ emconfig:
 
 .PHONY: clean
 clean:
-	$(RM) -rf perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *mmult.* *.log *.json *.xo baseline
+	$(RM) -rf *.dcp to_aws _x *.tar perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *mmult.* *.log *.json *.xo baseline
