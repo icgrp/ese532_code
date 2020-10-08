@@ -4,7 +4,7 @@
 help:
 	@echo "Makefile Usage:"
 	@echo ""
-	@echo "  make fpga"
+	@echo "  make all TARGET=<sw_emu|hw>"
 	@echo "      Command to generate the design for specified Target and Device."
 	@echo ""
 	@echo "  make exe "
@@ -23,8 +23,8 @@ help:
 TARGET := hw
 PLATFORM := xilinx_aws-vu9p-f1_shell-v04261818_201920_2
 HOST_EXE := host
-XO := Multiply_HW.xo
-XCLBIN := Multiply_HW.xclbin
+XO := mmult.xo
+XCLBIN := mmult.xclbin
 S3_BUCKET_NAME := ese532-$(shell aws sts get-caller-identity | grep "Account" | tr -dc '0-9')
 S3_DCP_DIR := vitis-dcps
 S3_LOG_DIR := vitis-logs
@@ -46,7 +46,7 @@ afi: afigen
 	wait_for_afi.py --afi $(shell cat *afi_id.txt | sed -n '2p' | tr -d '",' | sed 's/.*://') --notify --email $(EMAIL) &
 
 .PHONY: afigen
-afigen: fpga
+afigen: all
 	aws s3 mb s3://$(S3_BUCKET_NAME) --region us-east-1
 	aws s3 mb s3://$(S3_BUCKET_NAME)/$(S3_DCP_DIR)
 	touch FILES_GO_HERE.txt
@@ -57,7 +57,7 @@ afigen: fpga
 	rm -rf to_aws
 	$(VITIS_DIR)/tools/create_vitis_afi.sh -xclbin=$(XCLBIN) -s3_bucket=$(S3_BUCKET_NAME) -s3_dcp_key=$(S3_DCP_DIR) -s3_logs_key=$(S3_LOG_DIR)
 
-fpga:  $(XO) $(XCLBIN) $(HOST_EXE) emconfig
+all:  $(XO) $(XCLBIN) $(HOST_EXE) emconfig
 
 exe: $(HOST_EXE)
 
@@ -65,7 +65,7 @@ xclbin: $(XO) $(XCLBIN)
 
 # Building kernel
 $(XO): hls/MatrixMultiplication.cpp
-	v++ $(KRNL_COMPILE_OPTS) -c -k Multiply_HW -I./common -I./hls/ -o'$@' '$<'
+	v++ $(KRNL_COMPILE_OPTS) -c -k mmult -I./common -I./hls/ -o'$@' '$<'
 $(XCLBIN): $(XO)
 	v++ $(KRNL_LINK_OPTS) -l -o'$@' $(+)
 
@@ -79,4 +79,4 @@ emconfig:
 
 .PHONY: clean
 clean:
-	$(RM) -rf *.dcp to_aws _x *.tar perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *Multiply_HW.* *.log *.json *.xo
+	$(RM) -rf *.dcp to_aws _x *.tar perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *mmult.* *.log *.json *.xo

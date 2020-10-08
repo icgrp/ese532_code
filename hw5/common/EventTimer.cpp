@@ -40,10 +40,10 @@ EventTimer::EventTimer()
     max_string_length = 0;
 }
 
-float EventTimer::ns_difference(EventTimer::timepoint start,
+float EventTimer::ms_difference(EventTimer::timepoint start,
                                 EventTimer::timepoint end)
 {
-    std::chrono::duration<float, std::nano> duration = end - start;
+    std::chrono::duration<float, std::milli> duration = end - start;
     return duration.count();
 }
 
@@ -90,14 +90,14 @@ void EventTimer::print(int id)
         if ((unsigned)id > event_names.size())
             return;
         std::cout << event_names[id] << " : " << std::fixed << std::setprecision(3)
-                  << ns_difference(start_times[id], end_times[id]) << std::endl;
+                  << ms_difference(start_times[id], end_times[id]) << std::endl;
     }
     else {
         int printable_events = unfinished ? event_count - 1 : event_count;
         for (int i = 0; i < printable_events; i++) {
             std::cout << std::left << std::setw(max_string_length) << event_names[i] << " : ";
             std::cout << std::right << std::setw(8) << std::fixed << std::setprecision(3)
-                      << ns_difference(start_times[i], end_times[i]) << " ns"
+                      << ms_difference(start_times[i], end_times[i]) << " ms"
                       << std::endl;
         }
     }

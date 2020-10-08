@@ -32,16 +32,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
-#include <CL/cl2.hpp>
 #include "Utilities.h"
 #define MATRIX_SIZE (MATRIX_WIDTH*MATRIX_WIDTH)
-
-// Forward declaration of utility functions included at the end of this file
-std::vector<cl::Device> get_xilinx_devices();
-char* read_binary_file(const std::string &xclbin_file_name, unsigned &nb);
-void Multiply_SW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
-                 const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
-		         matrix_type Output[MATRIX_WIDTH * MATRIX_WIDTH]);
 
 // ------------------------------------------------------------------------------------
 // Main program
@@ -65,7 +57,7 @@ int main(int argc, char** argv)
     cl::Program::Binaries bins{{fileBuf, fileBufSize}};
     cl::Program program(context, devices, bins, NULL, &err);
     cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
-    cl::Kernel krnl_mmult(program,"Multiply_HW", &err);
+    cl::Kernel krnl_mmult(program,"mmult", &err);
 
 // ------------------------------------------------------------------------------------
 // Step 2: Create buffers and initialize test values
@@ -75,7 +67,7 @@ int main(int argc, char** argv)
     cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,  sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
     cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,  sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
     cl::Buffer out_buf_hw(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY, sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
-    cl::Buffer out_buf_sw(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR), sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
+    cl::Buffer out_buf_sw(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR, sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
 
     timer.add("Set kernel arguments");  
     // Map buffers to kernel arguments, thereby assigning them to specific device memory banks
@@ -111,18 +103,17 @@ int main(int argc, char** argv)
 
     timer.add("OCL Enqueue task");
     q.enqueueTask(krnl_mmult, NULL, &event_sp);
-    timer.add("Wait for Multiply_HW kernel to complete");
+    timer.add("Wait for mmult kernel to complete");
     clWaitForEvents(1, (const cl_event *)&event_sp);
     
     timer.add("Read back computation results (implicit device->host migration)");
     matrix_type *out_hw = (matrix_type *)q.enqueueMapBuffer(out_buf_hw, CL_TRUE, CL_MAP_READ, 0, sizeof(matrix_type) * MATRIX_SIZE);
-    
+    timer.finish();
+
 // ------------------------------------------------------------------------------------
 // Step 4: Check Results and Release Allocated Resources
 // ------------------------------------------------------------------------------------
-    timer.add("Multiply_SW run");
-    Multiply_SW(in1, in2, out_sw);
-    timer.finish();
+    multiply_gold(in1, in2, out_sw);
     bool match = Compare_matrices(out_sw, out_hw);
 
     delete[] fileBuf;
@@ -137,66 +128,4 @@ int main(int argc, char** argv)
 
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl; 
     return (match ? EXIT_SUCCESS : EXIT_FAILURE);
-}
-
-
-
-// ------------------------------------------------------------------------------------
-// Utility functions
-// ------------------------------------------------------------------------------------
-std::vector<cl::Device> get_xilinx_devices() 
-{
-    size_t i;
-    cl_int err;
-    std::vector<cl::Platform> platforms;
-    err = cl::Platform::get(&platforms);
-    cl::Platform platform;
-    for (i  = 0 ; i < platforms.size(); i++){
-        platform = platforms[i];
-        std::string platformName = platform.getInfo<CL_PLATFORM_NAME>(&err);
-        if (platformName == "Xilinx"){
-            std::cout << "INFO: Found Xilinx Platform" << std::endl;
-            break;
-        }
-    }
-    if (i == platforms.size()) {
-        std::cout << "ERROR: Failed to find Xilinx platform" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-   
-    //Getting ACCELERATOR Devices and selecting 1st such device 
-    std::vector<cl::Device> devices;
-    err = platform.getDevices(CL_DEVICE_TYPE_ACCELERATOR, &devices);
-    return devices;
-}
-   
-char* read_binary_file(const std::string &xclbin_file_name, unsigned &nb) 
-{
-    if(access(xclbin_file_name.c_str(), R_OK) != 0) {
-        printf("ERROR: %s xclbin not available please build\n", xclbin_file_name.c_str());
-        exit(EXIT_FAILURE);
-    }
-    //Loading XCL Bin into char buffer 
-    std::cout << "INFO: Loading '" << xclbin_file_name << "'\n";
-    std::ifstream bin_file(xclbin_file_name.c_str(), std::ifstream::binary);
-    bin_file.seekg (0, bin_file.end);
-    nb = bin_file.tellg();
-    bin_file.seekg (0, bin_file.beg);
-    char *buf = new char [nb];
-    bin_file.read(buf, nb);
-    return buf;
-}
-
-void Multiply_SW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
-                 const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
-		         matrix_type Output[MATRIX_WIDTH * MATRIX_WIDTH])
-{
-  for (int i = 0; i < MATRIX_WIDTH; i++)
-    for (int j = 0; j < MATRIX_WIDTH; j++)
-    {
-      matrix_type Result = 0;
-      for (int k = 0; k < MATRIX_WIDTH; k++)
-        Result += Input_1[i * MATRIX_WIDTH + k] * Input_2[k * MATRIX_WIDTH + j];
-      Output[i * MATRIX_WIDTH + j] = Result;
-    }
 }

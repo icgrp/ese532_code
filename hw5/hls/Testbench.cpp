@@ -83,7 +83,7 @@ bool Compare_matrices(const matrix_type *Matrix_1,
   return Equal;
 }
 
-void Multiply_SW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
+void multiply_gold(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
                  const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
                  matrix_type Output[MATRIX_WIDTH * MATRIX_WIDTH])
 {
@@ -107,8 +107,8 @@ int main()
   Randomize_matrix(Input_1);
   Randomize_matrix(Input_2);
 
-  Multiply_SW(Input_1, Input_2, Output_SW);
-  Multiply_HW(Input_1, Input_2, Output_HW);
+  multiply_gold(Input_1, Input_2, Output_SW);
+  mmult(Input_1, Input_2, Output_HW);
 
   bool Equal = Compare_matrices(Output_SW, Output_HW);
 

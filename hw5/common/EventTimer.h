@@ -48,7 +48,7 @@ private:
     unsigned int event_count;
     int max_string_length;
 
-    float ns_difference(EventTimer::timepoint start, EventTimer::timepoint end);
+    float ms_difference(EventTimer::timepoint start, EventTimer::timepoint end);
 
 public:
     EventTimer(void);

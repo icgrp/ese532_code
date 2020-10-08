@@ -1,6 +1,6 @@
 #include "MatrixMultiplication.h"
 
-void Multiply_HW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
+void mmult(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
 		const matrix_type Input_2[MATRIX_WIDTH * MATRIX_WIDTH],
 		matrix_type Output[MATRIX_WIDTH * MATRIX_WIDTH]) {
 #pragma HLS INTERFACE m_axi port=Input_1 bundle=aximm1
