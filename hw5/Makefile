@@ -36,8 +36,8 @@ CXXFLAGS := -I./common -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -Wal
 CXXFLAGS2 := -lOpenCL
 
 # Kernel compiler & linker global settings
-KRNL_COMPILE_OPTS := -t $(TARGET) --config design.cfg --jobs 8
-KRNL_LINK_OPTS := -t $(TARGET) --config design.cfg --jobs 8
+KRNL_COMPILE_OPTS := -t $(TARGET) --config design.cfg --jobs 8 --optimize 3
+KRNL_LINK_OPTS := -t $(TARGET) --config design.cfg --jobs 8 --optimize 3
 
 .PHONY: afi
 afi: afigen
