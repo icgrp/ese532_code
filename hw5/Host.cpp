@@ -48,9 +48,12 @@ void Multiply_SW(const matrix_type Input_1[MATRIX_WIDTH * MATRIX_WIDTH],
 // ------------------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
+// Initialize an event timer we'll use for monitoring the application
+    EventTimer timer;
 // ------------------------------------------------------------------------------------
 // Step 1: Initialize the OpenCL environment 
 // ------------------------------------------------------------------------------------ 
+    timer.add("OpenCL Initialization");
     cl_int err;
     std::string binaryFile = argv[1];
     unsigned fileBufSize;    
@@ -67,21 +70,26 @@ int main(int argc, char** argv)
 // ------------------------------------------------------------------------------------
 // Step 2: Create buffers and initialize test values
 // ------------------------------------------------------------------------------------
+    timer.add("Allocate contiguous OpenCL buffers");
     // Create the buffers and allocate memory   
     cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,  sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
     cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,  sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
-    cl::Buffer out_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY, sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
+    cl::Buffer out_buf_hw(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY, sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
+    cl::Buffer out_buf_sw(context, CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR), sizeof(matrix_type) * MATRIX_SIZE, NULL, &err);
 
+    timer.add("Set kernel arguments");  
     // Map buffers to kernel arguments, thereby assigning them to specific device memory banks
     krnl_mmult.setArg(0, in1_buf);
     krnl_mmult.setArg(1, in2_buf);
-    krnl_mmult.setArg(2, out_buf);
+    krnl_mmult.setArg(2, out_buf_hw);
 
+    timer.add("Map buffers to userspace pointers");
     // Map host-side buffer memory to user-space pointers
     matrix_type *in1 = (matrix_type *)q.enqueueMapBuffer(in1_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(matrix_type) * MATRIX_SIZE);
     matrix_type *in2 = (matrix_type *)q.enqueueMapBuffer(in2_buf, CL_TRUE, CL_MAP_WRITE, 0, sizeof(matrix_type) * MATRIX_SIZE); 
-    matrix_type *out = (matrix_type *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, sizeof(matrix_type) * MATRIX_SIZE);
-    
+    matrix_type *out_sw = (matrix_type *)q.enqueueMapBuffer(out_buf_sw, CL_TRUE, CL_MAP_WRITE | CL_MAP_READ, 0, sizeof(matrix_type) * MATRIX_SIZE);
+
+    timer.add("Populating buffer inputs");
     // Initialize the vectors used in the test
     Randomize_matrix(in1);
     Randomize_matrix(in2);
@@ -89,32 +97,43 @@ int main(int argc, char** argv)
 // ------------------------------------------------------------------------------------
 // Step 3: Run the kernel
 // ------------------------------------------------------------------------------------
-    stopwatch mult_time;
-    mult_time.start();
+    timer.add("Set kernel arguments");
     // Set kernel arguments
     krnl_mmult.setArg(0, in1_buf);
     krnl_mmult.setArg(1, in2_buf);
-    krnl_mmult.setArg(2, out_buf);
+    krnl_mmult.setArg(2, out_buf_hw);
 
     // Schedule transfer of inputs to device memory, execution of kernel, and transfer of outputs back to host memory
-    q.enqueueMigrateMemObjects({in1_buf, in2_buf}, 0 /* 0 means from host*/); 
-    q.enqueueTask(krnl_mmult);
-    q.enqueueMigrateMemObjects({out_buf}, CL_MIGRATE_MEM_OBJECT_HOST);
+    timer.add("Memory object migration enqueue host->device");
+    cl::Event event_sp;
+    q.enqueueMigrateMemObjects({in1_buf, in2_buf}, 0 /* 0 means from host*/, NULL, &event_sp); 
+    clWaitForEvents(1, (const cl_event *)&event_sp);
 
-    // Wait for all scheduled operations to finish
-    q.finish();
-    mult_time.stop();
-    std::cout << "The fpga acceleration took " << mult_time.latency() << " ns.\n";
+    timer.add("OCL Enqueue task");
+    q.enqueueTask(krnl_mmult, NULL, &event_sp);
+    timer.add("Wait for Multiply_HW kernel to complete");
+    clWaitForEvents(1, (const cl_event *)&event_sp);
+    
+    timer.add("Read back computation results (implicit device->host migration)");
+    matrix_type *out_hw = (matrix_type *)q.enqueueMapBuffer(out_buf_hw, CL_TRUE, CL_MAP_READ, 0, sizeof(matrix_type) * MATRIX_SIZE);
     
 // ------------------------------------------------------------------------------------
 // Step 4: Check Results and Release Allocated Resources
 // ------------------------------------------------------------------------------------
-    matrix_type *out_sw = Create_matrix();
+    timer.add("Multiply_SW run");
     Multiply_SW(in1, in2, out_sw);
-    bool match = Compare_matrices(out_sw, out);
+    timer.finish();
+    bool match = Compare_matrices(out_sw, out_hw);
 
-    Destroy_matrix(out_sw);
     delete[] fileBuf;
+    q.enqueueUnmapMemObject(in1_buf, in1);
+    q.enqueueUnmapMemObject(in2_buf, in2);
+    q.enqueueUnmapMemObject(out_buf_sw, out_sw);
+    q.enqueueUnmapMemObject(out_buf_hw, out_hw);
+    q.finish();
+
+    std::cout << "--------------- Key execution times ---------------" << std::endl;
+    timer.print();
 
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl; 
     return (match ? EXIT_SUCCESS : EXIT_FAILURE);

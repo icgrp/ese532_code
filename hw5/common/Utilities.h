@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "Constants.h"
-#include "Stopwatch.h"
+#include "EventTimer.h"
 
 matrix_type *Create_matrix(void);
 void Destroy_matrix(matrix_type *Matrix);

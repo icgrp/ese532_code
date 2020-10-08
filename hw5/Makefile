@@ -3,8 +3,6 @@
 .PHONY: help
 help:
 	@echo "Makefile Usage:"
-	@echo "  make baseline"
-	@echo "      Command to build the baseline."
 	@echo ""
 	@echo "  make fpga"
 	@echo "      Command to generate the design for specified Target and Device."
@@ -25,8 +23,8 @@ help:
 TARGET := hw
 PLATFORM := xilinx_aws-vu9p-f1_shell-v04261818_201920_2
 HOST_EXE := host
-XO := mmult.xo
-XCLBIN := mmult.xclbin
+XO := Multiply_HW.xo
+XCLBIN := Multiply_HW.xclbin
 S3_BUCKET_NAME := ese532-$(shell aws sts get-caller-identity | grep "Account" | tr -dc '0-9')
 S3_DCP_DIR := vitis-dcps
 S3_LOG_DIR := vitis-logs
@@ -40,9 +38,6 @@ CXXFLAGS2 := -lOpenCL
 # Kernel compiler & linker global settings
 KRNL_COMPILE_OPTS := -t $(TARGET) --config design.cfg --jobs 8
 KRNL_LINK_OPTS := -t $(TARGET) --config design.cfg --jobs 8
-
-baseline: cpu/MatrixMultiplication.cpp common/Utilities.cpp
-	g++ $(CXXFLAGS) $^ -o $@ $(CXXFLAGS2)
 
 .PHONY: afi
 afi: afigen
@@ -69,13 +64,13 @@ exe: $(HOST_EXE)
 xclbin: $(XO) $(XCLBIN)
 
 # Building kernel
-$(XO): fpga/hls/MatrixMultiplication.cpp
-	v++ $(KRNL_COMPILE_OPTS) -c -k Multiply_HW -I./common -I./fpga/hls/ -o'$@' '$<'
+$(XO): hls/MatrixMultiplication.cpp
+	v++ $(KRNL_COMPILE_OPTS) -c -k Multiply_HW -I./common -I./hls/ -o'$@' '$<'
 $(XCLBIN): $(XO)
 	v++ $(KRNL_LINK_OPTS) -l -o'$@' $(+)
 
 # Building Host
-$(HOST_EXE): fpga/Host.cpp common/Utilities.cpp
+$(HOST_EXE): Host.cpp common/Utilities.cpp common/EventTimer.cpp
 	g++ $(CXXFLAGS) $^ -o $@ $(CXXFLAGS2)
 
 .PHONY: emconfig
@@ -84,4 +79,4 @@ emconfig:
 
 .PHONY: clean
 clean:
-	$(RM) -rf *.dcp to_aws _x *.tar perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *mmult.* *.log *.json *.xo baseline
+	$(RM) -rf *.dcp to_aws _x *.tar perf* *.bin *.txt *.dSYM *.out *.o *~ rm -f $(HOST_EXE) *Multiply_HW.* *.log *.json *.xo
