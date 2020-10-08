@@ -90,9 +90,8 @@ int main(int argc, char** argv)
     q.enqueueMigrateMemObjects({in1_buf, in2_buf}, 0 /* 0 means from host*/, NULL, &event_sp); 
     clWaitForEvents(1, (const cl_event *)&event_sp);
 
-    timer.add("OCL Enqueue task");
+    timer.add("Run matrix multiply kernel");
     q.enqueueTask(krnl_mmult, NULL, &event_sp);
-    timer.add("Wait for mmult kernel to complete");
     clWaitForEvents(1, (const cl_event *)&event_sp);
     
     timer.add("Read back computation results (implicit device->host migration)");
