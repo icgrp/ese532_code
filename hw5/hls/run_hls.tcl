@@ -33,6 +33,7 @@ open_solution -reset solution1 -flow_target vitis
 set_part  {xcvu9p-flga2104-2-i}
 create_clock -period 8
 
+config_compile -dump_cfg=0 -name_max_length 80 -no_signed_zeros=0 -pipeline_loops 0 -pipeline_style stp -pragma_strict_mode=0 -unsafe_math_optimizations=0
 csynth_design
 config_export -format xo -output ../mmult.xo -rtl verilog
 export_design -rtl verilog -format xo -output ../mmult.xo
