@@ -10,7 +10,7 @@
 #define CHUNKS 1
 
 #define NUM_MAT 4
-#define NUM_TESTS 256
+#define NUM_TESTS 8192
 
 #define PIPELINE_DEPTH_MIN 1
 #define PIPELINE_DEPTH_MAX 4

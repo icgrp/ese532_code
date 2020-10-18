@@ -6,7 +6,7 @@
 #define CHUNKS 1
 
 #define NUM_MAT 4
-#define NUM_TESTS 256
+#define NUM_TESTS 8192
 
 #define PIPELINE_DEPTH_MIN 1
 #define PIPELINE_DEPTH_MAX 4
@@ -20,8 +20,10 @@
  *    interface.  Otherwise, the default RAM interface requires all data to arrive
  *    before starting HLS accelerator
  */
-void mmult_accel (float A[CHUNKS*N*N], float B[CHUNKS*N*N], float C[CHUNKS*N*N]);
-
+extern "C"
+{
+  void mmult(float A[CHUNKS*N*N], float B[CHUNKS*N*N], float C[CHUNKS*N*N]);
+}
 #endif /* MMULT_ACC_H_ */
 
 

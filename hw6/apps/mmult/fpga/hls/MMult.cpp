@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "mmult_accel.h"
+#include "MMult.h"
 
 /**
  *
@@ -12,8 +9,11 @@
  * 4. Separate multiply-accumulate in inner loop to force two FP operators
  *
  */
-void mmult_accel(float A[CHUNKS*N*N], float B[CHUNKS*N*N], float C[CHUNKS*N*N])
+void mmult(float A[CHUNKS*N*N], float B[CHUNKS*N*N], float C[CHUNKS*N*N])
 {
+#pragma HLS INTERFACE m_axi port=Input_1 bundle=aximm1
+#pragma HLS INTERFACE m_axi port=Input_2 bundle=aximm2
+#pragma HLS INTERFACE m_axi port=Output bundle=aximm3
      float A_tmp[N][N], B_tmp[N][N];
 #pragma HLS array_partition variable=A_tmp block factor=16 dim=2
 #pragma HLS array_partition variable=B_tmp block factor=16 dim=1
