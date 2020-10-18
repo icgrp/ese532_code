@@ -3,20 +3,17 @@
 help:
 	@echo "Makefile Usage:"
 	@echo ""
-	@echo "  make all TARGET=<sw_emu|hw>"
-	@echo "      Command to generate the design for specified Target and Device."
+	@echo "  make cpu"
+	@echo "      Command to build mmult_cpu."
 	@echo ""
-	@echo "  make exe "
-	@echo "      Command to generate host."
+	@echo "  make fpga "
+	@echo "      Command to build mmult_fpga."
 	@echo ""
-	@echo "  make xclbin "
-	@echo "      Command to generate hardware platform files(xo,xclbin)."
+	@echo "  make host "
+	@echo "      Command to build only the host program of mmult_fpga."
 	@echo ""
 	@echo "  make clean "
 	@echo "      Command to remove the generated files."
-	@echo ""
-	@echo "  make afi EMAIL=<your email> "
-	@echo "      Command to generate the fpga binary to run on AWS."
 	@echo ""
 #######################################################################################
 
@@ -44,90 +41,69 @@ VPP_OPTS = --target hw
 #
 # OpenCL kernel files
 #
-
-BINARY_CONTAINERS += mmult.xclbin
-
-BUILD_SUBDIRS += mmult.build
-MMULT_OBJS += mmult.build/mmult.xo
-ALL_KERNEL_OBJS += mmult.build/mmult.xo
-
-ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(ALL_KERNEL_OBJS)) $(subst .xclbin,.mdb,$(BINARY_CONTAINERS))
+XO := mmult_fpga.xo
+XCLBIN := mmult_fpga.xclbin
+ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(XO)) $(subst .xclbin,.mdb,$(XCLBIN))
 
 #
 # host files
 #
-
-HOST_OBJECTS += src/vadd.o
+HOST_SOURCES = fpga/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
+HOST_OBJECTS=$(HOST_SOURCES:.cpp=.o)
 HOST_EXE = host
 
-BUILD_SUBDIRS += src/
+CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ./../common/Utilities.cpp
+CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
+CPU_EXE = mmult_cpu
+
+.PHONY: cpu host
+cpu: $(CPU_EXE)
+
+host: $(HOST_EXE)
+
+$(CPU_EXE): $(CPU_OBJECTS)
+	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
+
+$(HOST_EXE): $(HOST_OBJECTS)
+	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
+	-@$(VPP) --package --config fpga/design.cfg $(XCLBIN)
+		
+.cpp.o:
+	$(HOST_CXX) $(CXXFLAGS) -I./fpga/hls/ -I../../common -o "$@" "$<"
 
 #
 # primary build targets
 #
 
-.PHONY: all clean
-all: $(BINARY_CONTAINERS) $(HOST_EXE)
+.PHONY: fpga clean
+fpga: $(XCLBIN) $(HOST_EXE)
 
 .NOTPARALLEL: clean
 
+clean-cpu:
+	-$(RM) $(CPU_EXE) $(CPU_OBJECTS) 
+
 clean-host:
-	-$(RM) $(HOST_EXE) $(HOST_OBJECTS)
+	-$(RM) $(HOST_EXE) $(HOST_OBJECTS) 
 
 clean-accelerators:
-	-$(RM) $(BINARY_CONTAINERS) $(ALL_KERNEL_OBJS) $(ALL_MESSAGE_FILES)
+	-$(RM) $(XCLBIN) $(XO) $(ALL_MESSAGE_FILES)
 	-$(RM) *.xclbin.sh *.xclbin.info *.xclbin.link_summary*
-	-$(RMDIR) $(BUILD_SUBDIRS)
 	-$(RMDIR) .Xil
 
 clean-package:
 	-${RMDIR} package
 	-${RMDIR} package.build
 
-clean: clean-host clean-accelerators clean-package
-
-.PHONY: incremental
-incremental: all
-
-
-nothing:
+clean: clean-cpu clean-host clean-accelerators clean-package
 
 #
-# binary container: mmult.xclbin
+# binary container: mmult_fpga.xclbin
 #
 
-mmult.build/krnl_vadd.xo: ../src/krnl_vadd.cpp mmult-krnl_vadd-compile.cfg common-config.cfg
-	-@mkdir -p $(@D)
+$(XO): fpga/hls/MMult.cpp
 	-@$(RM) $@
-	$(VPP) $(VPP_OPTS) --compile -I"$(<D)" --config common-config.cfg --config mmult-krnl_vadd-compile.cfg -o"$@" "$<"
-
-mmult.xclbin: $(MMULT_OBJS) mmult-link.cfg common-config.cfg
-	-@echo $(VPP) $(VPP_OPTS) --link --config common-config.cfg --config mmult-link.cfg -o"$@" $(MMULT_OBJS) > mmult.xclbin.sh
-	$(VPP) $(VPP_OPTS) --link --config common-config.cfg --config mmult-link.cfg -o"$@" $(MMULT_OBJS)
-
-#
-# host rules
-#
-
-src/vadd.o: ../src/vadd.cpp ../src/vadd.h
-	-@mkdir -p $(@D)
-	$(HOST_CXX) $(CXXFLAGS) -o "$@" "$<"
-
-$(HOST_EXE): $(HOST_OBJECTS)
-	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	-@echo $(VPP) --package --config package.cfg  mmult.xclbin
-	-@$(VPP) --package --config package.cfg  mmult.xclbin
-
-CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp
-CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
-CPU_EXE = mmult_cpu
-
-.PHONE: cpu
-cpu: $(CPU_EXE)
-
-$(CPU_EXE): $(CPU_OBJECTS)
-	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	
-.cpp.o:
-	$(HOST_CXX) $(CXXFLAGS) -I./cpu -I../../common -o "$@" "$<"
+	$(VPP) $(VPP_OPTS) -k mmult_fpga --compile -I"$(<D)" --config fpga/design.cfg -o"$@" "$<"
+$(XCLBIN): $(XO)
+	$(VPP) $(VPP_OPTS) --link --config fpga/design.cfg -o"$@" $(+)
 
