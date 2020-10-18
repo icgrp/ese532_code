@@ -56,28 +56,34 @@ int mmult_test(float *A[NUM_MAT], float *B[NUM_MAT], float *C_sw[NUM_MAT],
             << std::endl;
 
   EventTimer timer;
-
+  
+  timer.add("Creating arrays: A, B, C_sw, C");
   init_arrays(A, B, C_sw, C);
-
+  
+  timer.add("NUM_TESTS iterations of mmult_gold");
   for (int i = 0; i < NUM_TESTS; i++) {
     mmult_golden(A[i % NUM_MAT], B[i % NUM_MAT], C_sw[i % NUM_MAT]);
   }
   
-  timer.add("mmult on cpu");
+  timer.add("NUM_TESTS iterations of mmult on cpu");
   for (int i = 0; i < NUM_TESTS; i++) {
-    mmult_accel(A[i % NUM_MAT], B[i % NUM_MAT], C[i % NUM_MAT]);
+    mmult(A[i % NUM_MAT], B[i % NUM_MAT], C[i % NUM_MAT]);
   }
-  timer.finish()
-  std::cout << "--------------- Key execution times ---------------" << std::endl;
-  timer.print();
-
+  
+  timer.add("Checking results");
   int result = 0;
   for (int i = 0; !result && i < NUM_MAT; i++)
     result = result_check(C, C_sw);
+
+  timer.finish();
+  std::cout << "--------------- Key execution times ---------------" << std::endl;
+  timer.print();
   return result;
 }
 
 int main(int argc, char *argv[]) {
+  EventTimer timer;
+  timer.add("Main function");
   int pipeline_depth = PIPELINE_DEPTH_DEFAULT;
   float *A[NUM_MAT], *B[NUM_MAT], *C_sw[NUM_MAT], *C[NUM_MAT];
 
@@ -119,6 +125,9 @@ int main(int argc, char *argv[]) {
     free(C[m]);
     free(C_sw[m]);
   }
+  timer.finish();
+  std::cout << "--------------- Total runtime ---------------" << std::endl;
+  timer.print();
 
   return (test_failed ? -1 : 0);
 }

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "mmult_accel.h"
+#include "MMult.h"
 
 void mmult(float A[CHUNKS * N * N], float B[CHUNKS * N * N],
            float C[CHUNKS * N * N]) {

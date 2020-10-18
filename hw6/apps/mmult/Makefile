@@ -58,7 +58,6 @@ ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(ALL_KERNEL_OBJS)) $(subst .xclbin,.mdb,$(
 #
 
 HOST_OBJECTS += src/vadd.o
-
 HOST_EXE = host
 
 BUILD_SUBDIRS += src/
@@ -119,11 +118,16 @@ $(HOST_EXE): $(HOST_OBJECTS)
 	-@echo $(VPP) --package --config package.cfg  mmult.xclbin
 	-@$(VPP) --package --config package.cfg  mmult.xclbin
 
+CPU_SOURCES = cpu/Host.cpp cpu/MMult.cpp ../../common/EventTimer.cpp
+CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
+CPU_EXE = mmult_cpu
+
 .PHONE: cpu
 cpu: $(CPU_EXE)
 
-$(CPU_EXE): cpu/Host.cpp cpu/MMult.cpp ../common/EventTimer.cpp
-	$(HOST_CXX) $(CXXFLAGS) -I./cpu -I../common $^ -o $@ $(LDFLAGS)
+$(CPU_EXE): $(CPU_OBJECTS)
+	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
 	
-
+.cpp.o:
+	$(HOST_CXX) $(CXXFLAGS) -I./cpu -I../../common -o "$@" "$<"
 
