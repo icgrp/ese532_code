@@ -118,7 +118,7 @@ $(HOST_EXE): $(HOST_OBJECTS)
 	-@echo $(VPP) --package --config package.cfg  mmult.xclbin
 	-@$(VPP) --package --config package.cfg  mmult.xclbin
 
-CPU_SOURCES = cpu/Host.cpp cpu/MMult.cpp ../../common/EventTimer.cpp
+CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp
 CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
 CPU_EXE = mmult_cpu
 
