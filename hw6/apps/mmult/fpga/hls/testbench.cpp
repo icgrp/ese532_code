@@ -6,20 +6,24 @@
 #include <unistd.h>
 #include <vector>
 
-
-static void init_arrays(float *A, float *B, unsigned int num_tests) {
-  for (int c = 0; c < num_tests; c++) {
-    for (int i = 0; i < N; i++) {
-      for (int j = 0; j < N; j++) {
-        A[c * N * N + i * N + j] = 1 + i * N + j;
-        B[c * N * N + i * N + j] = rand() % (N * N);
+static void init_arrays(float *A[NUM_MAT], float *B[NUM_MAT],
+                        float *C_sw[NUM_MAT], float *C[NUM_MAT]) {
+  for (int m = 0; m < NUM_MAT; m++) {
+    for (int c = 0; c < CHUNKS; c++) {
+      for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+          A[m][c * N * N + i * N + j] = 1 + i * N + j;
+          B[m][c * N * N + i * N + j] = rand() % (N * N);
+          C_sw[m][c * N * N + i * N + j] = 0.0;
+          C[m][c * N * N + i * N + j] = 0.0;
+        }
       }
     }
   }
 }
 
-void mmult_cpu(float *A, float *B, float *C, unsigned int num_tests) {
-  for (int c = 0; c < num_tests; c++)
+void mmult_cpu(float *A, float *B, float *C) {
+  for (int c = 0; c < CHUNKS; c++)
     for (int row = 0; row < N; row++) {
       for (int col = 0; col < N; col++) {
         float result = 0.0;
@@ -31,47 +35,60 @@ void mmult_cpu(float *A, float *B, float *C, unsigned int num_tests) {
     }
 }
 
-static int result_check(float *c_fpga, float *c_cpu, unsigned int num_tests) {
-  for (int i = 0; i < num_tests * N * N; i++) {
-    if (c_cpu[i] != c_fpga[i]) {
-      std::cout << "Mismatch: data index=" << i << " d=" << c_cpu[i]
-                << ", dout=" << c_fpga[i] << std::endl;
-      return 1;
+static int result_check(float *C[NUM_MAT], float *C_sw[NUM_MAT]) {
+  for (int m = 0; m < NUM_MAT; m++) {
+    for (int i = 0; i < CHUNKS * N * N; i++) {
+      if (C_sw[m][i] != C[m][i]) {
+        std::cout << "Mismatch: data index=" << i << " d=" << C_sw[m][i]
+                  << ", dout=" << C[m][i] << std::endl;
+        return 1;
+      }
     }
   }
   return 0;
 }
 
 int main(int argc, char *argv[]) {
-  float *A, *B, *C_cpu, *C_fpga;
-  unsigned int num_tests = 8192;
+  int pipeline_depth = PIPELINE_DEPTH_DEFAULT;
+  float *A[NUM_MAT], *B[NUM_MAT], *C_sw[NUM_MAT], *C[NUM_MAT];
 
-  A = (float *)malloc(num_tests * N * N * sizeof(float));
-  B = (float *)malloc(num_tests * N * N * sizeof(float));
-  C_cpu = (float *)malloc(num_tests * N * N * sizeof(float));
-  C_fpga = (float *)malloc(num_tests * N * N * sizeof(float));
-  if (!A || !B || !C_cpu || !C_fpga) {
-    if (A)
-      free(A);
-    if (B)
-      free(B);
-    if (C_cpu)
-      free(C_cpu);
-    if (C_fpga)
-      free(C_fpga);
-    return 2;
+  for (int m = 0; m < NUM_MAT; m++) {
+    A[m] = (float *)malloc(CHUNKS * N * N * sizeof(float));
+    B[m] = (float *)malloc(CHUNKS * N * N * sizeof(float));
+    C[m] = (float *)malloc(CHUNKS * N * N * sizeof(float));
+    C_sw[m] = (float *)malloc(CHUNKS * N * N * sizeof(float));
+
+    if (!A[m] || !B[m] || !C[m] || !C_sw[m]) {
+      if (A[m])
+        free(A[m]);
+      if (B[m])
+        free(B[m]);
+      if (C[m])
+        free(C[m]);
+      if (C_sw[m])
+        free(C_sw[m]);
+      return 2;
+    }
   }
 
-  init_arrays(A, B, num_tests);
-  mmult_cpu(A, B, C_cpu, num_tests);
-  mmult_fpga(A, B, C_fpga, num_tests);
-  int equal = result_check(C_fpga, C_cpu, num_tests);
+  init_arrays(A, B, C_sw, C);
+  for (int i = 0; i < NUM_TESTS; i++) {
+    mmult_cpu(A[i % NUM_MAT], B[i % NUM_MAT], C_sw[i % NUM_MAT]);
+  }
+  for (int i = 0; i < NUM_TESTS; i++) {
+    mmult_fpga(A[i % NUM_MAT], B[i % NUM_MAT], C[i % NUM_MAT]);
+  }
+  int equal = 0;
+  for (int i = 0; !result && i < NUM_MAT; i++)
+    equal = result_check(C, C_sw);
   std::cout << "TEST " << (equal ? "PASSED" : "FAILED") << std::endl;
 
-  free(A);
-  free(B);
-  free(C_cpu);
-  free(C_fpga);
+  for (int m = 0; m < NUM_MAT; m++) {
+    free(A[m]);
+    free(B[m]);
+    free(C[m]);
+    free(C_sw[m]);
+  }
 
   return equal ? 0 : 1;
 }
