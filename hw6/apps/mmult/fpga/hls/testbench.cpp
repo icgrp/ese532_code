@@ -78,10 +78,10 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < NUM_TESTS; i++) {
     mmult_fpga(A[i % NUM_MAT], B[i % NUM_MAT], C[i % NUM_MAT]);
   }
-  int equal = 0;
-  for (int i = 0; !result && i < NUM_MAT; i++)
-    equal = result_check(C, C_sw);
-  std::cout << "TEST " << (equal ? "PASSED" : "FAILED") << std::endl;
+  int failed = 0;
+  for (int i = 0; !failed && i < NUM_MAT; i++)
+    failed = result_check(C, C_sw);
+  std::cout << "TEST " << (!failed ? "PASSED" : "FAILED") << std::endl;
 
   for (int m = 0; m < NUM_MAT; m++) {
     free(A[m]);
@@ -90,5 +90,5 @@ int main(int argc, char *argv[]) {
     free(C_sw[m]);
   }
 
-  return equal ? 0 : 1;
+  return failed ? 1 : 0;
 }

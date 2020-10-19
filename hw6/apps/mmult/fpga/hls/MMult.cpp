@@ -12,13 +12,9 @@
  */
 void mmult_fpga(float A[CHUNKS * N * N], float B[CHUNKS * N * N],
                 float C[CHUNKS * N * N]) {
-#pragma HLS INTERFACE m_axi port = A bundle = gmem
-#pragma HLS INTERFACE m_axi port = B bundle = gmem
-#pragma HLS INTERFACE m_axi port = C bundle = gmem
-
   float A_tmp[N][N], B_tmp[N][N];
-#pragma HLS array_partition variable = A_tmp block factor = 16 dim = 2
-#pragma HLS array_partition variable = B_tmp block factor = 16 dim = 1
+#pragma HLS array_partition variable=A_tmp block factor=16 dim=2
+#pragma HLS array_partition variable=B_tmp block factor=16 dim=1
 
   for (int c = 0; c < CHUNKS; c++) {
     for (int i = 0; i < N; i++) {
@@ -28,9 +24,7 @@ void mmult_fpga(float A[CHUNKS * N * N], float B[CHUNKS * N * N],
         B_tmp[i][j] = B[c * N * N + i * N + j];
       }
     }
-  }
 
-  for (int c = 0; c < CHUNKS; c++) {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
 #pragma HLS PIPELINE
