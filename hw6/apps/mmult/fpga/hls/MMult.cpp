@@ -11,9 +11,16 @@
  *
  */
 void mmult_fpga(float *A, float *B, float *C, unsigned int num_tests) {
-#pragma HLS INTERFACE m_axi port = Input_1 bundle = aximm1
-#pragma HLS INTERFACE m_axi port = Input_2 bundle = aximm1
-#pragma HLS INTERFACE m_axi port = Output bundle = aximm1
+#pragma HLS INTERFACE s_axilite port = A bundle = control
+#pragma HLS INTERFACE s_axilite port = B bundle = control
+#pragma HLS INTERFACE s_axilite port = C bundle = control
+#pragma HLS INTERFACE s_axilite port = num_tests bundle = control
+#pragma HLS INTERFACE s_axilite port = return bundle = control
+
+#pragma HLS INTERFACE m_axi port=A  offset=slave bundle=gmemA
+#pragma HLS INTERFACE m_axi port=B  offset=slave bundle=gmemB
+#pragma HLS INTERFACE m_axi port=C  offset=slave bundle=gmemC
+
   float A_tmp[N][N], B_tmp[N][N];
 #pragma HLS array_partition variable = A_tmp block factor = 16 dim = 2
 #pragma HLS array_partition variable = B_tmp block factor = 16 dim = 1

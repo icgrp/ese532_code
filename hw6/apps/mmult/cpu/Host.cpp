@@ -13,13 +13,12 @@ constexpr int PIPELINE_DEPTH_MIN = 1;
 constexpr int PIPELINE_DEPTH_MAX = 4;
 constexpr int PIPELINE_DEPTH_DEFAULT = 4;
 
-static void init_arrays(float *A, float *B, float *C, unsigned int num_tests) {
+static void init_arrays(float *A, float *B, unsigned int num_tests) {
   for (int c = 0; c < num_tests; c++) {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
-        A[m][c * N * N + i * N + j] = 1 + i * N + j;
-        B[m][c * N * N + i * N + j] = rand() % (N * N);
-        C[m][c * N * N + i * N + j] = 0.0;
+        A[c * N * N + i * N + j] = 1 + i * N + j;
+        B[c * N * N + i * N + j] = rand() % (N * N);
       }
     }
   }
@@ -40,7 +39,6 @@ void mmult_cpu(float *A, float *B, float *C, unsigned int num_tests) {
 
 int main(int argc, char *argv[]) {
   EventTimer timer;
-  timer.add("Main function");
   float *A, *B, *C;
   unsigned int num_tests = 8192;
 
@@ -64,7 +62,7 @@ int main(int argc, char *argv[]) {
             << " floating point mmult on cpu..." << std::endl;
 
   timer.add("Creating arrays: A, B, C");
-  init_arrays(A, B, C);
+  init_arrays(A, B, num_tests);
 
   timer.add("Running mmult_cpu");
   mmult_cpu(A, B, C, num_tests);

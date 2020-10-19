@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 
   timer.add("Populating buffer inputs");
   // Initialize the vectors used in the test
-  init_arrays(in1, in2);
+  init_arrays(in1, in2, num_tests);
 
   // ------------------------------------------------------------------------------------
   // Step 3: Run the kernel

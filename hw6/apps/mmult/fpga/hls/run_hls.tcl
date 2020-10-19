@@ -20,7 +20,7 @@ create_clock -period 5
 
 config_compile -dump_cfg=0 -name_max_length 80 -no_signed_zeros=0 -pipeline_loops 0 -pipeline_style stp -pragma_strict_mode=0 -unsafe_math_optimizations=0
 csynth_design
-config_export -format xo -output ../../mmult_fpga.xo -rtl verilog
-export_design -rtl verilog -format xo -output ../../mmult_fpga.xo
+config_export -format xo -output ../../kernel.xo -rtl verilog
+export_design -rtl verilog -format xo -output ../../kernel.xo
 
 exit

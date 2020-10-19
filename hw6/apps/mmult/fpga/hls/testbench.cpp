@@ -6,14 +6,13 @@
 #include <unistd.h>
 #include <vector>
 
-constexpr int N = 32;
 
 static void init_arrays(float *A, float *B, unsigned int num_tests) {
   for (int c = 0; c < num_tests; c++) {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
-        A[m][c * N * N + i * N + j] = 1 + i * N + j;
-        B[m][c * N * N + i * N + j] = rand() % (N * N);
+        A[c * N * N + i * N + j] = 1 + i * N + j;
+        B[c * N * N + i * N + j] = rand() % (N * N);
       }
     }
   }
@@ -44,7 +43,7 @@ static int result_check(float *c_fpga, float *c_cpu, unsigned int num_tests) {
 }
 
 int main(int argc, char *argv[]) {
-  float *A, *B, *C;
+  float *A, *B, *C_cpu, *C_fpga;
   unsigned int num_tests = 8192;
 
   A = (float *)malloc(num_tests * N * N * sizeof(float));
@@ -63,7 +62,7 @@ int main(int argc, char *argv[]) {
     return 2;
   }
 
-  init_arrays(A, B);
+  init_arrays(A, B, num_tests);
   mmult_cpu(A, B, C_cpu, num_tests);
   mmult_fpga(A, B, C_fpga, num_tests);
   int equal = result_check(C_fpga, C_cpu, num_tests);
@@ -71,7 +70,8 @@ int main(int argc, char *argv[]) {
 
   free(A);
   free(B);
-  free(C);
+  free(C_cpu);
+  free(C_fpga);
 
   return equal ? 0 : 1;
 }

@@ -28,7 +28,7 @@ RM = rm -f
 RMDIR = rm -rf
 
 VITIS_PLATFORM = ese532_hw6_pfm
-VITIS_PLATFORM_DIR ?= /media/lilbirb/research/git/avnet/petalinux/projects/ese532_hw6_pfm/export/ese532_hw6_pfm
+VITIS_PLATFORM_DIR = /media/lilbirb/research/git/avnet/petalinux/projects/ese532_hw6_pfm/export/ese532_hw6_pfm
 VITIS_PLATFORM_PATH = $(VITIS_PLATFORM_DIR)/ese532_hw6_pfm.xpfm
 
 # host compiler global settings
@@ -36,13 +36,13 @@ CXXFLAGS += -march=armv8-a+simd -mtune=cortex-a53 -std=c++11 -DVITIS_PLATFORM=$(
 LDFLAGS += -lxilinxopencl -lpthread -lrt -ldl -lcrypt -lstdc++ -L$(VITIS_PLATFORM_DIR)/sw/ese532_hw6_pfm/linux_domain/sysroot/aarch64-xilinx-linux/usr/lib/ --sysroot=$(VITIS_PLATFORM_DIR)/sw/ese532_hw6_pfm/linux_domain/sysroot/aarch64-xilinx-linux
 
 # hardware compiler shared settings
-VPP_OPTS = --target hw
+VPP_OPTS = --target hw --jobs $(shell nproc)
 
 #
 # OpenCL kernel files
 #
-XO := mmult_fpga.xo
-XCLBIN := mmult_fpga.xclbin
+XO := kernel.xo
+XCLBIN := kernel.xclbin
 ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(XO)) $(subst .xclbin,.mdb,$(XCLBIN))
 
 #
@@ -50,9 +50,9 @@ ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(XO)) $(subst .xclbin,.mdb,$(XCLBIN))
 #
 HOST_SOURCES = fpga/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
 HOST_OBJECTS=$(HOST_SOURCES:.cpp=.o)
-HOST_EXE = host
+HOST_EXE = mmult_fpga
 
-CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ./../common/Utilities.cpp
+CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
 CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
 CPU_EXE = mmult_cpu
 
@@ -66,7 +66,8 @@ $(CPU_EXE): $(CPU_OBJECTS)
 
 $(HOST_EXE): $(HOST_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	-@$(VPP) --package --config fpga/design.cfg $(XCLBIN)
+	-@echo $(VPP) --package --config fpga/package.cfg $(XCLBIN)
+	-@$(VPP) --package --config fpga/package.cfg $(XCLBIN)
 		
 .cpp.o:
 	$(HOST_CXX) $(CXXFLAGS) -I./fpga/hls/ -I../../common -o "$@" "$<"
@@ -98,7 +99,7 @@ clean-package:
 clean: clean-cpu clean-host clean-accelerators clean-package
 
 #
-# binary container: mmult_fpga.xclbin
+# binary container: kernel.xclbin
 #
 
 $(XO): fpga/hls/MMult.cpp

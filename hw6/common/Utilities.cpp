@@ -43,7 +43,7 @@ char* read_binary_file(const std::string &xclbin_file_name, unsigned &nb)
     return buf;
 }
 
-void store_data(const char *filename, float *data, unsigned int size) {
+void store_data(const char *filename, float *data, unsigned int size)
 {
     FILE *file = fopen(filename, "wb");
     fwrite(data, 1, size, file);
