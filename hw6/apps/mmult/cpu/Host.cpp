@@ -7,11 +7,14 @@
 #include <unistd.h>
 #include <vector>
 
+// matrix size, N x N
+constexpr int N = 512;
+
 static void init_arrays(float *A, float *B) {
     for (int i = 0; i < N; i++) {
       for (int j = 0; j < N; j++) {
-        A[i * N + j] = rand() % 512;
-        B[i * N + j] = rand() % 512;
+        A[i * N + j] = 1 + i * N + j;
+        B[i * N + j] = rand() % (N * N);
       }
     }
 }
@@ -31,14 +34,7 @@ void mmult_cpu(float *A, float *B, float *C) {
 int main(int argc, char *argv[]) {
   EventTimer timer;
   float *A, *B, *C;
-  // matrix size, N x N
-  unsigned int N = 1024;
 
-  // pass from the command line if you want
-  // to see how long things take
-  if (argc == 2) {
-    N = atoi(argv[1]);
-  }
   A = (float *)malloc(N * N * sizeof(float));
   B = (float *)malloc(N * N * sizeof(float));
   C = (float *)malloc(N * N * sizeof(float));
