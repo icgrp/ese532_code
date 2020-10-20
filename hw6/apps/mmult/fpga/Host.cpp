@@ -16,15 +16,19 @@
 #include "MMult.h"
 #include "Utilities.h"
 
-static void init_arrays(float *A, float *B, unsigned int num_tests) {
-  for (int c = 0; c < num_tests; c++) {
-    for (int i = 0; i < N; i++) {
-      for (int j = 0; j < N; j++) {
-        A[c * N * N + i * N + j] = 1 + i * N + j;
-        B[c * N * N + i * N + j] = rand() % (N * N);
-      }
-    }
-  }
+static void init_arrays(float *A[NUM_MAT],  
+                        float *B[NUM_MAT])
+{
+     for (int m = 0; m < NUM_MAT; m++) {
+    	for (int c = 0; c < CHUNKS; c++) {
+          for (int i = 0; i < N; i++) {
+               for (int j = 0; j < N; j++) {
+                    A[m][ c * N * N + i * N + j] = 1+i*N+j;
+                    B[m][ c * N * N + i * N + j] = rand() % (N * N);
+               }
+          }
+    	}
+     }
 }
 
 /**
@@ -35,12 +39,6 @@ static void init_arrays(float *A, float *B, unsigned int num_tests) {
  */
 int main(int argc, char *argv[]) {
   EventTimer timer;
-  timer.add("Main function");
-  unsigned int num_tests = 8192;
-
-  if (argc == 3) {
-    num_tests = atoi(argv[2]);
-  }
 
   //   int pipeline_depth = PIPELINE_DEPTH_DEFAULT;
 
@@ -54,9 +52,8 @@ int main(int argc, char *argv[]) {
   //       return 1;
   //     }
   //   }
-  std::cout << "Running " << num_tests << " " << N << "x" << N
-            << " floating point mmult on fpga..." << std::endl;
-
+  std::cout << "Running " << CHUNKS << "x" <<NUM_TESTS << " iterations of " << N << "x" << N
+               << " task pipelined floating point mmult..." << std::endl;
   // ------------------------------------------------------------------------------------
   // Step 1: Initialize the OpenCL environment
   // ------------------------------------------------------------------------------------
@@ -79,61 +76,74 @@ int main(int argc, char *argv[]) {
   // ------------------------------------------------------------------------------------
   timer.add("Allocate contiguous OpenCL buffers");
   // Create the buffers and allocate memory
-  cl::Buffer in1_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
-                     num_tests * N * N * sizeof(float), NULL, &err);
-  cl::Buffer in2_buf(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
-                     num_tests * N * N * sizeof(float), NULL, &err);
-  cl::Buffer out_buf_hw(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY,
-                        num_tests * N * N * sizeof(float), NULL, &err);
+  cl::Buffer A_buf[NUM_MAT];
+  cl::Buffer B_buf[NUM_MAT];
+  cl::Buffer C_buf[NUM_MAT];
+  float *A[NUM_MAT], *B[NUM_MAT], *C[NUM_MAT];
 
-  timer.add("Set kernel arguments");
-  // Map buffers to kernel arguments, thereby assigning them to specific device
-  // memory banks
-  krnl_mmult.setArg(0, in1_buf);
-  krnl_mmult.setArg(1, in2_buf);
-  krnl_mmult.setArg(2, out_buf_hw);
-  krnl_mmult.setArg(3, num_tests);
-
-  timer.add("Map buffers to userspace pointers");
-  // Map host-side buffer memory to user-space pointers
-  float *in1 = (float *)q.enqueueMapBuffer(in1_buf, CL_TRUE, CL_MAP_WRITE, 0,
-                                           num_tests * N * N * sizeof(float));
-  float *in2 = (float *)q.enqueueMapBuffer(in2_buf, CL_TRUE, CL_MAP_WRITE, 0,
-                                           num_tests * N * N * sizeof(float));
-
+  for (int m = 0; m < NUM_MAT; m++) {
+    A_buf[m] = cl::Buffer(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+                     CHUNKS * N * N * sizeof(float), NULL, &err);
+    B_buf[m] = cl::Buffer(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_READ_ONLY,
+                     CHUNKS * N * N * sizeof(float), NULL, &err);
+    C_buf[m] = cl::Buffer(context, CL_MEM_ALLOC_HOST_PTR | CL_MEM_WRITE_ONLY,
+                        CHUNKS * N * N * sizeof(float), NULL, &err);
+    
+    // Map host-side buffer memory to user-space pointers
+    A[m] = (float *)q.enqueueMapBuffer(A_buf[m], CL_TRUE, CL_MAP_WRITE, 0,
+                                            CHUNKS * N * N * sizeof(float));
+    B[m] = (float *)q.enqueueMapBuffer(B_buf[m], CL_TRUE, CL_MAP_WRITE, 0,
+                                            CHUNKS * N * N * sizeof(float));
+  }
+  
   timer.add("Populating buffer inputs");
   // Initialize the vectors used in the test
-  init_arrays(in1, in2, num_tests);
-
+  init_arrays(A, B);
+  
   // ------------------------------------------------------------------------------------
   // Step 3: Run the kernel
   // ------------------------------------------------------------------------------------
 
-  // Schedule transfer of inputs to device memory, execution of kernel, and
+  timer.add("Running kernel");
+  for (int i = 0; i < NUM_TESTS; i++) {
+    // Map buffers to kernel arguments, thereby assigning them to specific device
+    // memory banks
+    krnl_mmult.setArg(0, A_buf[i%NUM_MAT]);
+    krnl_mmult.setArg(1, B_buf[i%NUM_MAT]);
+    krnl_mmult.setArg(2, C_buf[i%NUM_MAT]);
+    // Schedule transfer of inputs to device memory, execution of kernel, and
   // transfer of outputs back to host memory
-  timer.add("Memory object migration enqueue host->device");
+
   cl::Event event_sp;
-  q.enqueueMigrateMemObjects({in1_buf, in2_buf}, 0 /* 0 means from host*/, NULL,
+  q.enqueueMigrateMemObjects({A_buf[i%NUM_MAT], B_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, NULL,
                              &event_sp);
   clWaitForEvents(1, (const cl_event *)&event_sp);
-
-  timer.add("Launch mmult kernel");
   q.enqueueTask(krnl_mmult, NULL, &event_sp);
-  timer.add("Wait for mmult kernel to finish running");
   clWaitForEvents(1, (const cl_event *)&event_sp);
+  }
 
   timer.add("Read back computation results (implicit device->host migration)");
-  float *out_hw = (float *)q.enqueueMapBuffer(
-      out_buf_hw, CL_TRUE, CL_MAP_READ, 0, num_tests * N * N * sizeof(float));
+  for (int m = 0; m < NUM_MAT; m++) {
+    C[m] = (float *)q.enqueueMapBuffer(
+      C_buf[m], CL_TRUE, CL_MAP_READ, 0, CHUNKS * N * N * sizeof(float));
+    q.enqueueUnmapMemObject(A_buf[m], A[m]);
+    q.enqueueUnmapMemObject(B_buf[m], B[m]);
+    q.enqueueUnmapMemObject(C_buf[m], C[m]);
+  }
   
-  store_data("output_fpga.bin", out_hw, num_tests * N * N * sizeof(float));
+  timer.add("Writing output to output_fpga.bin");
+  FILE *file = fopen("output_fpga.bin", "wb");
+  for (int m = 0; m < NUM_MAT; m++) {
+    fwrite(C[m], sizeof(float), CHUNKS * N * N, file);
+  }
+  fclose(file);
+
+  
   // ------------------------------------------------------------------------------------
   // Step 4: Release Allocated Resources
   // ------------------------------------------------------------------------------------
   delete[] fileBuf;
-  q.enqueueUnmapMemObject(in1_buf, in1);
-  q.enqueueUnmapMemObject(in2_buf, in2);
-  q.enqueueUnmapMemObject(out_buf_hw, out_hw);
+  
   q.finish();
   timer.finish();
   std::cout << "--------------- Key execution times ---------------"
