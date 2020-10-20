@@ -117,15 +117,15 @@ int main(int argc, char *argv[]) {
   cl::Event event_sp;
   q.enqueueMigrateMemObjects({A_buf[i%NUM_MAT], B_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, NULL,
                              &event_sp);
-  clWaitForEvents(1, (const cl_event *)&event_sp);
+  //clWaitForEvents(1, (const cl_event *)&event_sp);
   q.enqueueTask(krnl_mmult, NULL, &event_sp);
-  clWaitForEvents(1, (const cl_event *)&event_sp);
+  //clWaitForEvents(1, (const cl_event *)&event_sp);
+  C[i%NUM_MAT] = (float *)q.enqueueMapBuffer(
+      C_buf[i%NUM_MAT], CL_TRUE, CL_MAP_READ, 0, CHUNKS * N * N * sizeof(float));
   }
 
   timer.add("Read back computation results (implicit device->host migration)");
   for (int m = 0; m < NUM_MAT; m++) {
-    C[m] = (float *)q.enqueueMapBuffer(
-      C_buf[m], CL_TRUE, CL_MAP_READ, 0, CHUNKS * N * N * sizeof(float));
     q.enqueueUnmapMemObject(A_buf[m], A[m]);
     q.enqueueUnmapMemObject(B_buf[m], B[m]);
     q.enqueueUnmapMemObject(C_buf[m], C[m]);
