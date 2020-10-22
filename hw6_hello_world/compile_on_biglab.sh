@@ -1,6 +1,7 @@
 #!/bin/bash
 XLXDIR='/mnt/pollux/software/xilinx/2020.1'
-export PLATFORM_REPO_PATHS=/home1/s/stahmed/ese532_platforms
+# change the PLATFORM_REPO_PATHS
+export PLATFORM_REPO_PATHS=/home1/s/stahmed/ese532_platforms/ese532_hw6_pfm
 export XILINXD_LICENSE_FILE=/mnt/pollux/software/xilinx/.Xilinx/
 export XILINX_VITIS=${XLXDIR}/Vitis/2020.1
 if [ -n "${PATH}" ]; then
@@ -14,4 +15,7 @@ if [ -n "${PATH}" ]; then
 else
   export PATH=${XLXDIR}/Vivado/2020.1/bin
 fi
+export PATH=/usr/sbin:$PATH
+# run with four cpus since there are other people using biglab
+# and your processes can get killed if they hog all the cpus.
 make fpga -j4
