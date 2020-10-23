@@ -28,7 +28,7 @@ RM = rm -f
 RMDIR = rm -rf
 
 VITIS_PLATFORM = ese532_hw6_pfm
-VITIS_PLATFORM_DIR = /media/lilbirb/research/git/avnet/petalinux/projects/ese532_hw6_pfm/export/ese532_hw6_pfm
+VITIS_PLATFORM_DIR = ${PLATFORM_REPO_PATHS}
 VITIS_PLATFORM_PATH = $(VITIS_PLATFORM_DIR)/ese532_hw6_pfm.xpfm
 
 # host compiler global settings
@@ -36,7 +36,7 @@ CXXFLAGS += -march=armv8-a+simd -mtune=cortex-a53 -std=c++11 -DVITIS_PLATFORM=$(
 LDFLAGS += -lxilinxopencl -lpthread -lrt -ldl -lcrypt -lstdc++ -L$(VITIS_PLATFORM_DIR)/sw/ese532_hw6_pfm/linux_domain/sysroot/aarch64-xilinx-linux/usr/lib/ --sysroot=$(VITIS_PLATFORM_DIR)/sw/ese532_hw6_pfm/linux_domain/sysroot/aarch64-xilinx-linux
 
 # hardware compiler shared settings
-VPP_OPTS = --target hw --jobs $(shell nproc)
+VPP_OPTS = --target hw
 
 #
 # OpenCL kernel files
@@ -48,27 +48,34 @@ ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(XO)) $(subst .xclbin,.mdb,$(XCLBIN))
 #
 # host files
 #
-HOST_SOURCES = fpga/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
-HOST_OBJECTS=$(HOST_SOURCES:.cpp=.o)
-HOST_EXE = mmult_fpga
+HOST_SOURCES_UNALIGNED = fpga/HostUnaligned.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
+HOST_OBJECTS_UNALIGNED =$(HOST_SOURCES_UNALIGNED:.cpp=.o)
+HOST_EXE_UNALIGNED = host_unaligned
+
+HOST_SOURCES_ALIGNED = fpga/HostAligned.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
+HOST_OBJECTS_ALIGNED =$(HOST_SOURCES_ALIGNED:.cpp=.o)
+HOST_EXE_ALIGNED = host_aligned
 
 CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
 CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
 CPU_EXE = mmult_cpu
 
-.PHONY: cpu host
+.PHONY: cpu
 cpu: $(CPU_EXE)
 
-host: $(HOST_EXE)
-
 $(CPU_EXE): $(CPU_OBJECTS)
-	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
+	$(HOST_CXX) -I./fpga/hls/ -o "$@" $(+) $(LDFLAGS)
 
-$(HOST_EXE): $(HOST_OBJECTS)
+$(HOST_EXE_UNALIGNED): $(HOST_OBJECTS_UNALIGNED)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	-@echo $(VPP) --package --config fpga/package.cfg $(XCLBIN)
-	-@$(VPP) --package --config fpga/package.cfg $(XCLBIN)
-		
+	-@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
+	-@$(VPP) --package --config fpga/package.cfg --package.sd_file "$@" --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
+
+$(HOST_EXE_ALIGNED): $(HOST_OBJECTS_ALIGNED)
+	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
+	-@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
+	-@$(VPP) --package --config fpga/package.cfg --package.sd_file "$@" --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
+
 .cpp.o:
 	$(HOST_CXX) $(CXXFLAGS) -I./fpga/hls/ -I../../common -o "$@" "$<"
 
@@ -77,26 +84,31 @@ $(HOST_EXE): $(HOST_OBJECTS)
 #
 
 .PHONY: fpga clean
-fpga: $(XCLBIN) $(HOST_EXE)
+fpga: $(XCLBIN)
 
 .NOTPARALLEL: clean
 
 clean-cpu:
 	-$(RM) $(CPU_EXE) $(CPU_OBJECTS) 
 
-clean-host:
-	-$(RM) $(HOST_EXE) $(HOST_OBJECTS) 
+clean-host-unaligned:
+	-$(RM) $(HOST_EXE_UNALIGNED) $(HOST_OBJECTS_UNALIGNED) 
+
+clean-host-aligned:
+	-$(RM) $(HOST_EXE_ALIGNED) $(HOST_OBJECTS_ALIGNED) 
 
 clean-accelerators:
 	-$(RM) $(XCLBIN) $(XO) $(ALL_MESSAGE_FILES)
-	-$(RM) *.xclbin.sh *.xclbin.info *.xclbin.link_summary*
-	-$(RMDIR) .Xil
+	-$(RM) *.xclbin.sh *.xclbin.info *.xclbin.link_summary* *.compile_summary
+	-$(RMDIR) .Xil fpga/hls/proj_mmult
 
 clean-package:
 	-${RMDIR} package
 	-${RMDIR} package.build
 
-clean: clean-cpu clean-host clean-accelerators clean-package
+clean: clean-cpu clean-host-unaligned clean-host-aligned clean-accelerators clean-package
+	-$(RM) *.log *.package_summary
+	-${RMDIR} _x .ipcache
 
 #
 # binary container: kernel.xclbin

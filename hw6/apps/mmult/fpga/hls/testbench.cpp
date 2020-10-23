@@ -49,7 +49,6 @@ static int result_check(float *C[NUM_MAT], float *C_sw[NUM_MAT]) {
 }
 
 int main(int argc, char *argv[]) {
-  int pipeline_depth = PIPELINE_DEPTH_DEFAULT;
   float *A[NUM_MAT], *B[NUM_MAT], *C_sw[NUM_MAT], *C[NUM_MAT];
 
   for (int m = 0; m < NUM_MAT; m++) {
