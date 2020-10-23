@@ -19,3 +19,4 @@ export PATH=/usr/sbin:$PATH
 # run with four cpus since there are other people using biglab
 # and your processes can get killed if they hog all the cpus.
 make fpga -j4
+make host
