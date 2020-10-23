@@ -48,13 +48,9 @@ ALL_MESSAGE_FILES = $(subst .xo,.mdb,$(XO)) $(subst .xclbin,.mdb,$(XCLBIN))
 #
 # host files
 #
-HOST_SOURCES_UNALIGNED = fpga/HostUnaligned.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
-HOST_OBJECTS_UNALIGNED =$(HOST_SOURCES_UNALIGNED:.cpp=.o)
-HOST_EXE_UNALIGNED = host_unaligned
-
-HOST_SOURCES_ALIGNED = fpga/HostAligned.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
-HOST_OBJECTS_ALIGNED =$(HOST_SOURCES_ALIGNED:.cpp=.o)
-HOST_EXE_ALIGNED = host_aligned
+HOST_SOURCES = fpga/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
+HOST_OBJECTS =$(HOST_SOURCES:.cpp=.o)
+HOST_EXE = host
 
 CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
 CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
@@ -66,12 +62,7 @@ cpu: $(CPU_EXE)
 $(CPU_EXE): $(CPU_OBJECTS)
 	$(HOST_CXX) -I./fpga/hls/ -o "$@" $(+) $(LDFLAGS)
 
-$(HOST_EXE_UNALIGNED): $(HOST_OBJECTS_UNALIGNED)
-	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	-@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
-	-@$(VPP) --package --config fpga/package.cfg --package.sd_file "$@" --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
-
-$(HOST_EXE_ALIGNED): $(HOST_OBJECTS_ALIGNED)
+$(HOST_EXE): $(HOST_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
 	-@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
 	-@$(VPP) --package --config fpga/package.cfg --package.sd_file "$@" --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
@@ -91,11 +82,8 @@ fpga: $(XCLBIN)
 clean-cpu:
 	-$(RM) $(CPU_EXE) $(CPU_OBJECTS) 
 
-clean-host-unaligned:
-	-$(RM) $(HOST_EXE_UNALIGNED) $(HOST_OBJECTS_UNALIGNED) 
-
-clean-host-aligned:
-	-$(RM) $(HOST_EXE_ALIGNED) $(HOST_OBJECTS_ALIGNED) 
+clean-host:
+	-$(RM) $(HOST_EXE) $(HOST_OBJECTS) 
 
 clean-accelerators:
 	-$(RM) $(XCLBIN) $(XO) $(ALL_MESSAGE_FILES)
@@ -106,7 +94,7 @@ clean-package:
 	-${RMDIR} package
 	-${RMDIR} package.build
 
-clean: clean-cpu clean-host-unaligned clean-host-aligned clean-accelerators clean-package
+clean: clean-cpu clean-host clean-accelerators clean-package
 	-$(RM) *.log *.package_summary
 	-${RMDIR} _x .ipcache
 
