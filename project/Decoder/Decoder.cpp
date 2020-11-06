@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #define CODE_LENGTH (13)
-#define MAX_CHUNK_SIZE (1<<CODE_LENGTH)
 
 typedef std::vector<std::string> code_table;
 typedef std::vector<std::string> chunk_list;

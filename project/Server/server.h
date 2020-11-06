@@ -7,14 +7,14 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define CHUNKSIZE 2048 // Tuneable. must match the transmitter side
+#define PAYLOAD_SIZE 2048 // Tuneable. must match the transmitter side
 #define HEADER 2
 
 class ESE532_Server{
 public:
 
     //
-	int setup_server(int avg_chunksize);
+	int setup_server(int avg_payload_size);
 
 	//
 	int get_packet(unsigned char* buffer);
@@ -24,8 +24,8 @@ protected:
     //
     int sockfd;
 
-    // chunksize passed in from cli
-    int chunksize;
+    // payload_size passed in from cli
+    int payload_size;
 
     // addresss information
     struct sockaddr_in servaddr;

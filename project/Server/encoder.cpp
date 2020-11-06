@@ -22,15 +22,15 @@
 int offset = 0;
 unsigned char* file;
 
-void handle_input(int argc, char* argv[], int* chunksize) {
+void handle_input(int argc, char* argv[], int* payload_size) {
 	int x;
 	extern char *optarg;
 
 	while ((x = getopt(argc, argv, ":c:")) != -1) {
 		switch (x) {
 		case 'c':
-			*chunksize = atoi(optarg);
-			printf("chunkisize is set to %d optarg\n", *chunksize);
+			*payload_size = atoi(optarg);
+			printf("payload_size is set to %d optarg\n", *payload_size);
 			break;
 		case ':':
 			printf("-%c without parameter\n", optopt);
@@ -49,10 +49,10 @@ int main(int argc, char* argv[]) {
 	ESE532_Server server;
 
 	// default is 2k
-	int chunksize = CHUNKSIZE;
+	int payload_size = PAYLOAD_SIZE;
 
-	// set chunksize if decalred through command line
-	handle_input(argc, argv, &chunksize);
+	// set payload_size if decalred through command line
+	handle_input(argc, argv, &payload_size);
 
 	file = (unsigned char*) malloc(sizeof(unsigned char) * 70000000);
 	if (file == NULL) {
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	server.setup_server(chunksize);
+	server.setup_server(payload_size);
 
 	writer = pipe_depth;
 	server.get_packet(input[writer]);

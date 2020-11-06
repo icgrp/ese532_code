@@ -14,7 +14,7 @@
 #define HEADER 2
 
 // basic
-int ESE532_Server::setup_server(int avg_chunksize)
+int ESE532_Server::setup_server(int avg_payload_size)
 {
 
 	printf("setting up sever...\n");
@@ -54,7 +54,7 @@ int ESE532_Server::setup_server(int avg_chunksize)
 	server_len = sizeof(servaddr);
 
 	//
-	chunksize = avg_chunksize;
+	payload_size = avg_payload_size;
 
 	printf("server setup complete!\n");
 
@@ -63,7 +63,7 @@ int ESE532_Server::setup_server(int avg_chunksize)
 
 int ESE532_Server::get_packet(unsigned char* buffer)
 {
-	int bytes_read = recvfrom(sockfd, (void *)buffer, chunksize+HEADER,0, ( struct sockaddr *) &servaddr,	&server_len);
+	int bytes_read = recvfrom(sockfd, (void *)buffer, payload_size+HEADER,0, ( struct sockaddr *) &servaddr,	&server_len);
 	packets_read++;
 	// crash
 	if( bytes_read < 0 )
