@@ -14,7 +14,7 @@
 #include <time.h>
 
 #define PORT 8091
-#define PAYLOAD_SIZE 2048
+#define PAYLOAD_SIZE 8192
 #define MAX_PAYLOAD_SIZE 16384
 #define HEADER 2
 #define DONE_BIT (1 << 7)

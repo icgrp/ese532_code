@@ -9,13 +9,11 @@
 #include <netinet/in.h>
 #include "server.h"
 
-
 #define PORT	 8091
 #define HEADER 2
 
 // basic
-int ESE532_Server::setup_server(int avg_payload_size)
-{
+int ESE532_Server::setup_server(int avg_payload_size) {
 
 	printf("setting up sever...\n");
 
@@ -23,29 +21,27 @@ int ESE532_Server::setup_server(int avg_payload_size)
 	int opt = 1;
 
 	// Creating socket file descriptor
-	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 )
-	{
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 
-
 	memset(&servaddr, 0, sizeof(servaddr));
 
-	if(setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
+			sizeof(opt)))
 		perror("sockopt");
-
 
 	// Filling server information
 	//
-	bzero(&servaddr,sizeof(servaddr));
+	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET; // IPv4
 	servaddr.sin_addr.s_addr = htons(INADDR_ANY);
 	servaddr.sin_port = htons(PORT);
 
 	// Bind the socket with the server address
-	if ( bind(sockfd, (const struct sockaddr *)&servaddr,sizeof(servaddr)) < 0 )
-	{
+	if (bind(sockfd, (const struct sockaddr *) &servaddr, sizeof(servaddr))
+			< 0) {
 		perror("bind failed");
 		exit(EXIT_FAILURE);
 	}
@@ -61,13 +57,12 @@ int ESE532_Server::setup_server(int avg_payload_size)
 	return 0;
 }
 
-int ESE532_Server::get_packet(unsigned char* buffer)
-{
-	int bytes_read = recvfrom(sockfd, (void *)buffer, payload_size+HEADER,0, ( struct sockaddr *) &servaddr,	&server_len);
+int ESE532_Server::get_packet(unsigned char* buffer) {
+	int bytes_read = recvfrom(sockfd, (void *) buffer, payload_size + HEADER, 0,
+			(struct sockaddr *) &servaddr, &server_len);
 	packets_read++;
 	// crash
-	if( bytes_read < 0 )
-	{
+	if (bytes_read < 0) {
 		perror("recvfrom failed!");
 		//assert(bytes_read > 0);
 	}

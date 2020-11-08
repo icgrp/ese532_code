@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include "event_timer.h"
+#include "stopwatch.h"
 
 #define NUM_PACKETS 8
 #define pipe_depth 4
@@ -40,7 +40,7 @@ void handle_input(int argc, char* argv[], int* payload_size) {
 }
 
 int main(int argc, char* argv[]) {
-	EventTimer timer;
+	stopwatch ethernet_timer;
 	unsigned char* input[NUM_PACKETS];
 	int writer = 0;
 	int done = 0;
@@ -73,8 +73,6 @@ int main(int argc, char* argv[]) {
 	writer = pipe_depth;
 	server.get_packet(input[writer]);
 
-	timer.add("Reading packets and processing");
-
 	count++;
 
 	// get packet
@@ -101,7 +99,10 @@ int main(int argc, char* argv[]) {
 			writer = 0;
 		}
 
+		ethernet_timer.start();
 		server.get_packet(input[writer]);
+		ethernet_timer.stop();
+
 		count++;
 
 		// get packet
@@ -117,7 +118,6 @@ int main(int argc, char* argv[]) {
 		offset += length;
 		writer++;
 	}
-	timer.finish();
 
 	// write file to root and you can use diff tool on board
 	FILE *outfd = fopen("output_cpu.bin", "wb");
@@ -130,9 +130,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	free(file);
-	std::cout << "--------------- Key execution times ---------------"
-			<< std::endl;
-	timer.print();
+	std::cout << "--------------- Key Throughputs ---------------" << std::endl;
+	float ethernet_latency = ethernet_timer.latency() / 1000.0;
+	float input_throughput = (bytes_written * 8 / 1000000.0) / ethernet_latency; // Mb/s
+	std::cout << "Input Throughput to Encoder: " << input_throughput << " Mb/s."
+			<< " (Latency: " << ethernet_latency << "s)." << std::endl;
+
 	return 0;
 }
 

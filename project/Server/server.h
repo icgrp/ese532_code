@@ -7,13 +7,13 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define PAYLOAD_SIZE 2048 // Tuneable. must match the transmitter side
+#define PAYLOAD_SIZE 8192 // Tuneable. must match the transmitter side
 #define HEADER 2
 
-class ESE532_Server{
+class ESE532_Server {
 public:
 
-    //
+	//
 	int setup_server(int avg_payload_size);
 
 	//
@@ -21,19 +21,19 @@ public:
 
 protected:
 
-    //
-    int sockfd;
+	//
+	int sockfd;
 
-    // payload_size passed in from cli
-    int payload_size;
+	// payload_size passed in from cli
+	int payload_size;
 
-    // addresss information
-    struct sockaddr_in servaddr;
+	// addresss information
+	struct sockaddr_in servaddr;
 
-    //
-    socklen_t server_len = sizeof(servaddr);
+	//
+	socklen_t server_len = sizeof(servaddr);
 
-    int packets_read;
+	int packets_read;
 
 };
 
