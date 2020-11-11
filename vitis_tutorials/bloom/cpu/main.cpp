@@ -132,7 +132,6 @@ int main(int argc, char** argv)
 
     std::cout << "Initializing data"<< endl;
     block_size = num_iter*64;
-    chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
     setupData();
 
     runOnCPU(
@@ -143,17 +142,11 @@ int main(int argc, char** argv)
         cpu_profileScore.data(),
         total_num_docs,
         size) ;
-    chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
     
     printf("--------------------------------------------------------------------\n");
     
     cout << " Execution COMPLETE" << endl;
     cout << endl;
-    
-    chrono::duration<double> hash_processing   = (t2-t1);
 
-    printf(" Total execution time of CPU         | %10.4f ms\n", 1000*hash_processing.count());
-    
     return 0;
 }
-
