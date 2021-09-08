@@ -24,7 +24,7 @@ void test_cdc( const char* file )
 	int bytes_read = fread(&buff[0],sizeof(unsigned char),file_size,fp);
 	printf("bytes_read %d\n",bytes_read);
 
-	// call your cdc function here with buff as input
+	// call your cdc function here with buff and file_size as inputs
 
     free(buff);
     return;
