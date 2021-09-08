@@ -31,7 +31,11 @@ int main(int argc, char ** argv)
 
   // output
   bit8 output[MAX_X][MAX_Y];
-  rendering_sw(triangle_3ds, output);
+  #ifdef WITH_TIMER
+    rendering_sw_with_timer(triangle_3ds, output);
+  #else
+    rendering_sw(triangle_3ds, output);
+  #endif
  
   // check results
   printf("Writing output...\n");

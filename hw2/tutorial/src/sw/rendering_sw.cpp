@@ -288,7 +288,7 @@ void coloringFB(int counter, int size_pixels, Pixel pixels[], bit8 frame_buffer[
 }
 
 /*========================TOP FUNCTION===========================*/
-void rendering_sw( Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_Y])
+void rendering_sw_with_timer( Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_Y])
 {
   // local variables
 
@@ -357,4 +357,52 @@ void rendering_sw( Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_
   std::cout << "Average latency of coloringFB per loop iteration is: " << time_coloringFB.avg_latency() << " ns." << std::endl;
   std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ns." << std::endl;
 
+}
+
+void rendering_sw( Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_Y])
+{
+  // local variables
+
+  // 2D triangle
+  Triangle_2D triangle_2ds;
+  // projection angle
+  int angle = 0;
+
+  // max-min index arrays
+  bit8 max_min[5];
+  int max_index[1];
+
+  // fragments
+  CandidatePixel fragment[500];
+
+  // pixel buffer
+  Pixel pixels[500];
+  bool flag;
+  int size_fragment;
+  int size_pixels;
+
+  // processing NUM_3D_TRI 3D triangles
+  TRIANGLES: for (int i = 0; i < NUM_3D_TRI; i ++ )
+  {
+    // five stages for processing each 3D triangle
+    for(int i = 0; i < 100; i++) {
+      projection( triangle_3ds[i], &triangle_2ds, angle );
+    }
+
+    for(int i = 0; i < 100; i++) {
+      flag = rasterization1(triangle_2ds, max_min, max_index);
+    }
+
+    for(int i = 0; i < 100; i++) {
+      size_fragment = rasterization2( flag, max_min, max_index, triangle_2ds, fragment );
+    }
+
+    for(int i = 0; i < 100; i++) {
+      size_pixels = zculling( i, fragment, size_fragment, pixels);
+    }
+
+    for(int i = 0; i < 100; i++) {
+      coloringFB ( i, size_pixels, pixels, output);
+    }
+  }
 }

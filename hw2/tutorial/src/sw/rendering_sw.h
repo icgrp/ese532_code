@@ -12,6 +12,7 @@
 #include "../host/typedefs.h"
 
 void rendering_sw(Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_Y]);
+void rendering_sw_with_timer(Triangle_3D triangle_3ds[NUM_3D_TRI], bit8 output[MAX_X][MAX_Y]);
 
 #endif
 

@@ -10,7 +10,7 @@
 CC = g++
 
 # define any compile-time flags
-CFLAGS = -Wall -g -O2
+CFLAGS = -Wall -g -O2 -Wno-unused-label
 
 # define any directories containing header files other than /usr/include
 # e.g. -I/home/newhall/include  -I../include
@@ -42,6 +42,7 @@ OBJS = $(SRCS:.c=.o)
 
 # define the executable file
 MAIN = rendering
+GPROF_MAIN = rendering_instrumented
 
 #
 # The following part of the makefile is generic; it can be used to
@@ -54,12 +55,22 @@ MAIN = rendering
 all:    $(MAIN)
 	@echo  Executable $(MAIN) compiled!
 
+gprof:	$(GPROF_MAIN)
+	@echo  Executable $(GPROF_MAIN) compiled!
+	@echo  Running ./$(GPROF_MAIN) to get gmon.out for gprof...
+	@./$(GPROF_MAIN)
+	@echo  Running gprof -p ./$(GPROF_MAIN)...
+	@gprof -p ./$(GPROF_MAIN)
+
 perf: all
 	@echo Running perf stat...
 	@sudo perf stat ./$(MAIN)
 
 $(MAIN): $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+	$(CC) -DWITH_TIMER $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+
+$(GPROF_MAIN): $(OBJS)
+	$(CC) -pg $(CFLAGS) $(INCLUDES) -o $(GPROF_MAIN) $(OBJS) $(LFLAGS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
@@ -69,7 +80,7 @@ $(MAIN): $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
 
 clean:
-	$(RM) -rf perf* Output.bin *.txt *.out *.o *~ $(MAIN)
+	$(RM) -rf perf* Output.bin *.txt *.out *.o *~ $(MAIN) $(GPROF_MAIN)
 
 depend: $(SRCS)
 	makedepend $(INCLUDES) $^
