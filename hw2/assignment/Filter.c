@@ -13,23 +13,23 @@ unsigned Coefficients[] = {2, 15, 62, 98, 62, 15, 2};
 
 void Filter_horizontal(const unsigned char * Input, unsigned char * Output)
 {
-  for (int Y = 0; Y < INPUT_HEIGHT; Y++)
-    for (int X = 0; X < OUTPUT_WIDTH; X++)
+  LOOP1: for (int Y = 0; Y < INPUT_HEIGHT; Y++)
+    LOOP2: for (int X = 0; X < OUTPUT_WIDTH; X++)
     {
       unsigned int Sum = 0;
-      for (int i = 0; i < FILTER_LENGTH; i++)
+      LOOP3: for (int i = 0; i < FILTER_LENGTH; i++)
         Sum += Coefficients[i] * Input[Y * INPUT_WIDTH + X + i];
       Output[Y * OUTPUT_WIDTH + X] = Sum >> 8;
     }
 }
 
-static void Filter_vertical(const unsigned char * Input, unsigned char * Output)
+void Filter_vertical(const unsigned char * Input, unsigned char * Output)
 {
-  for (int Y = 0; Y < OUTPUT_HEIGHT; Y++)
-    for (int X = 0; X < OUTPUT_WIDTH; X++)
+  LOOP1: for (int Y = 0; Y < OUTPUT_HEIGHT; Y++)
+    LOOP2: for (int X = 0; X < OUTPUT_WIDTH; X++)
     {
       unsigned int Sum = 0;
-      for (int i = 0; i < FILTER_LENGTH; i++)
+      LOOP3: for (int i = 0; i < FILTER_LENGTH; i++)
         Sum += Coefficients[i] * Input[(Y + i) * OUTPUT_WIDTH + X];
       Output[Y * OUTPUT_WIDTH + X] = Sum >> 8;
     }
