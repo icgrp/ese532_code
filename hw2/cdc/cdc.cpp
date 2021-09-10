@@ -1,5 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <math.h>
+
+#define WIN_SIZE 16
+#define PRIME 3
+#define MODULUS 256
+#define TARGET 0
+
+uint64_t hash_func(unsigned char *input, unsigned int pos)
+{
+	// put your hash function implementation here
+}
+
+void cdc(unsigned char *buff, unsigned int buff_size)
+{
+	// put your cdc implementation here
+
+}
 
 void test_cdc( const char* file )
 {
@@ -22,9 +40,8 @@ void test_cdc( const char* file )
 	}
 
 	int bytes_read = fread(&buff[0],sizeof(unsigned char),file_size,fp);
-	printf("bytes_read %d\n",bytes_read);
 
-	// call your cdc function here with buff and file_size as inputs
+	cdc(buff, file_size);
 
     free(buff);
     return;
