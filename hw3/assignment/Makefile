@@ -3,11 +3,11 @@ CXXFLAGS = -std=c++11 -Wall -O2 -g -DNDEBUG -pthread
 LDFLAGS = -lpthread -pthread
 INCLUDES = -I./common
 
-EXECUTABLES = base coarse pipeline2 pipeline4 walkthrough
+EXECUTABLES = base coarse pipeline2 cdc walkthrough
 BASELINE_SRC = $(wildcard baseline/*.cpp common/*.cpp)
 COURSEGRAIN_SRC = $(wildcard coarse_grain/*.cpp common/*.cpp)
 PIPELINE2_SRC = $(wildcard pipeline_2_cores/*.cpp common/*.cpp)
-PIPELINE4_SRC = $(wildcard pipeline_4_cores/*.cpp common/*.cpp)
+CDC_SRC = $(wildcard cdc_parallel/*.cpp common/*.cpp)
 WALKTHROUGH_SRC = Walkthrough.cpp $(wildcard common/*.cpp)
 
 .PHONY: clean
@@ -24,7 +24,7 @@ coarse: $(COURSEGRAIN_SRC)
 pipeline2: $(PIPELINE2_SRC)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
-pipeline4: $(PIPELINE4_SRC)
+cdc: $(CDC_SRC)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@ $(LDFLAGS)
 
 walkthrough: $(WALKTHROUGH_SRC)
