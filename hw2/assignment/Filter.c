@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "App.h"
-#define INPUT_HEIGHT (1500)
-#define INPUT_WIDTH (2000)
+#define INPUT_HEIGHT (4500)
+#define INPUT_WIDTH (6000)
 
 #define FILTER_LENGTH (7)
 

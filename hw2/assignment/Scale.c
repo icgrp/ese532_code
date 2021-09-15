@@ -1,5 +1,5 @@
-#define HEIGHT (3000)
-#define WIDTH (4000)
+#define HEIGHT (9000)
+#define WIDTH (12000)
 
 void Scale(const unsigned char * Input, unsigned char * Output)
 {
