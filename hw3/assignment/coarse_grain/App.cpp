@@ -9,16 +9,16 @@ int main()
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
 
   if (Input_data == NULL)
-    Exit_with_error();
+    Exit_with_error("malloc failed at main for Input_data");
 
   if (Output_data == NULL)
-    Exit_with_error();
+    Exit_with_error("malloc failed at main for Output_data");
 
   for (int Stage = 0; Stage < STAGES - 1; Stage++)
   {
     Temp_data[Stage] = (unsigned char *)malloc(FRAME_SIZE);
     if (Temp_data[Stage] == NULL)
-      Exit_with_error();
+      Exit_with_error("malloc failed at main for Temp_data");
   }
 
   Load_data(Input_data);

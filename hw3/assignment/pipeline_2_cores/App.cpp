@@ -53,10 +53,10 @@ int main()
   unsigned char *Output_data = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
 
   if (Input_data == NULL)
-    Exit_with_error();
+    Exit_with_error("malloc failed at main for Input_data");
 
   if (Output_data == NULL)
-    Exit_with_error();
+    Exit_with_error("malloc failed at main for Output_data");
 
   unsigned char temp_data[STAGES - 1][FRAME_SIZE], *aux[STAGES - 1], **Temp_data;
   Temp_data = (unsigned char **)aux;

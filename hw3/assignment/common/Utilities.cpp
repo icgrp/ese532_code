@@ -1,8 +1,8 @@
 #include "Utilities.h"
 
-void Exit_with_error(void)
+void Exit_with_error(const char *s)
 {
-    perror(NULL);
+    printf("%s\n", s);
     exit(EXIT_FAILURE);
 }
 
@@ -12,13 +12,13 @@ void Load_data(unsigned char *Data)
 
     FILE *File = fopen("../data/Input.bin", "rb");
     if (File == NULL)
-        Exit_with_error();
+        Exit_with_error("fopen for Load_data failed");
 
     if (fread(Data, 1, Size, File) != Size)
-        Exit_with_error();
+        Exit_with_error("fread for Load_data failed");
 
     if (fclose(File) != 0)
-        Exit_with_error();
+        Exit_with_error("fclose for Load_data failed");
 }
 
 // from https://eli.thegreenplace.net/2016/c11-threads-affinity-and-hyperthreading/
@@ -62,28 +62,28 @@ void Store_data(const char *Filename, unsigned char *Data, unsigned int Size)
 {
     FILE *File = fopen(Filename, "wb");
     if (File == NULL)
-        Exit_with_error();
+        Exit_with_error("fopen for Store_data failed");
 
     if (fwrite(Data, 1, Size, File) != Size)
-        Exit_with_error();
+        Exit_with_error("fwrite for Store_data failed");
 
     if (fclose(File) != 0)
-        Exit_with_error();
+        Exit_with_error("fclose for Store_data failed");
 }
 
 void Check_data(unsigned char *Data, unsigned int Size)
 {
-    int error_code;
+    int error_code = 0;
     unsigned char *Data_golden = (unsigned char *)malloc(MAX_OUTPUT_SIZE);
     FILE *File = fopen("../data/Golden.bin", "rb");
     if (File == NULL)
-        Exit_with_error();
+        Exit_with_error("fopen for Check_data failed");
 
     if (fread(Data_golden, 1, Size, File) != Size)
-        Exit_with_error();
+        Exit_with_error("fread for Check_data failed");
 
     if (fclose(File) != 0)
-        Exit_with_error();
+        Exit_with_error("fclose for Check_data failed");
 
     for (unsigned int i = 0; i < Size; i++)
     {
@@ -95,11 +95,11 @@ void Check_data(unsigned char *Data, unsigned int Size)
     }
 
     free(Data_golden);
-    error_code = 0;
 
     if (error_code != 0)
     {
         printf("You got errors in data %d\n", error_code);
+        Exit_with_error("Input.bin and Golden.bin doesn't match");
     }
     else
     {

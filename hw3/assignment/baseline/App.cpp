@@ -12,7 +12,7 @@ int main()
   {
     Temp_data[Stage] = (unsigned char *)malloc(FRAME_SIZE);
     if (Temp_data[Stage] == NULL)
-      Exit_with_error();
+      Exit_with_error("malloc failed at main for Temp_data");
   }
 
   Load_data(Input_data);
