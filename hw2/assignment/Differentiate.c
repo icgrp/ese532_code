@@ -1,4 +1,4 @@
-#define HEIGHT (4494)
+#define HEIGHT (3994)
 #define WIDTH (5994)
 
 void Differentiate(const unsigned char * Input, unsigned char * Output)

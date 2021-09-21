@@ -1,4 +1,4 @@
-#define SIZE (4494 * 5994)
+#define SIZE (3994 * 5994)
 
 unsigned long long int Codes[] =
 {

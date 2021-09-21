@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DATA_SIZE (12000 * 9000)
+#define DATA_SIZE (12000 * 8000)
 #define STAGES (4)
 
 unsigned char * Data[STAGES + 1];
