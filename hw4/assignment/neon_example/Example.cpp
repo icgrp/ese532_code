@@ -23,19 +23,17 @@ void add3_c(unsigned int *data){
 }
 
 void print_NEON (uint8_t* data, char* name) {
-	printf ("%s = ", name);
+	printf ("%s:\n", name);
 	for (int i = 0; i < 128; i++) {
-		printf ("%02d ", data[i]);
+		printf ("%02d\n", data[i]);
 	}
-	printf ("\n");
 }
 
 void print_C (unsigned int *data, char* name) {
-    printf ("%s = ", name);
+    printf ("%s:\n", name);
     for (int i = 0; i < 128; i++) {
-	    printf ("%02d ", data[i]);
+	    printf ("%02d\n", data[i]);
     }
-    printf ("\n");
 }
 
 int main () {
