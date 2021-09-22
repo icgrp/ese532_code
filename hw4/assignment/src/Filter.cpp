@@ -31,7 +31,7 @@ void Filter_vertical(const unsigned char *Input, unsigned char *Output)
   uint16x8_t Coef1 = vdupq_n_u16(Coefficients[1]);
   uint16x8_t Coef2 = vdupq_n_u16(Coefficients[2]);
   uint16x8_t Coef3 = vdupq_n_u16(Coefficients[3]);
-  for (int X = 0; X < OUTPUT_WIDTH; X += 8)
+  for (int X = 0; X < OUTPUT_WIDTH; X += 16)
   {
     uint8x16_t Data0 = vld1q_u8(Input + 0 * OUTPUT_WIDTH + X);
    	uint8x16_t Data1 = vld1q_u8(Input + 1 * OUTPUT_WIDTH + X);
