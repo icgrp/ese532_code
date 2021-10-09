@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 
   for (int m = 0; m < NUM_MAT; m++) {
     // @TODO:
-    // Allocate contiguous memory using cl::Buffer by supplying CL_MEM_ALLOC_HOST_PTR
+    // Remove CL_MEM_USE_HOST_PTR and 
     // Use enqueueMapBuffer to get user side pointer
 
     A[m] = (float *)malloc(bytes_per_iteration);
@@ -100,15 +100,23 @@ int main(int argc, char *argv[]) {
   // ------------------------------------------------------------------------------------
 
   timer2.add("Running kernel");
+  std::vector<cl::Event> write_events;
   for (int i = 0; i < NUM_TESTS; i++) {
-    std::vector<cl::Event> write_events, exec_events, read_events;
+    std::vector<cl::Event> exec_events, read_events;
     cl::Event write_ev, exec_ev, read_ev;
 
     krnl_mmult.setArg(0, A_buf[i%NUM_MAT]);
     krnl_mmult.setArg(1, B_buf[i%NUM_MAT]);
     krnl_mmult.setArg(2, C_buf[i%NUM_MAT]);
-    q.enqueueMigrateMemObjects({A_buf[i%NUM_MAT], B_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, NULL,
+    if(i == 0){
+        q.enqueueMigrateMemObjects({A_buf[i%NUM_MAT], B_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, NULL,
                               &write_ev);
+    } else {
+
+        q.enqueueMigrateMemObjects({A_buf[i%NUM_MAT], B_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, &write_events,
+                              &write_ev);
+        write_events.pop_back();
+    }
     write_events.push_back(write_ev);
     q.enqueueTask(krnl_mmult, &write_events, &exec_ev);
     exec_events.push_back(exec_ev);
@@ -121,6 +129,7 @@ int main(int argc, char *argv[]) {
   // ------------------------------------------------------------------------------------
   // Step 4: Release Allocated Resources
   // ------------------------------------------------------------------------------------
+  timer2.add("Read back computation results (implicit device->host migration)");
   // @TODO:
   // Add another loop here and release cl::Buffer and
   // user side pointers using enqueueUnmapMemObject
