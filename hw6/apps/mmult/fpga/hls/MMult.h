@@ -3,7 +3,7 @@
 #define MMULT_ACC_H_
 
 #define N 32
-#define CHUNKS 120
+#define CHUNKS 130
 
 #define NUM_MAT 4
 #define NUM_TESTS 256
