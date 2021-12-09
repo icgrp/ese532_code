@@ -10,6 +10,9 @@ void core_1_process(int Frame,
   Filter_core_1(Temp_data[0], Temp_data[1]);
 }
 
+// Processes 2 frames,
+// Scale, Filter for one frame in core_1
+// Filter, Differentiate, Compress for another frame in in core_0
 void core_0_process(int &Size,
                     int Frame,
                     unsigned char *Input_data,
@@ -29,7 +32,7 @@ void core_0_process(int &Size,
     pin_thread_to_cpu(core_1_thread, 1);
   }
 
-  if (Frame > 0)
+  if (Frame > 0) // skips Frame==0
   {
     Filter_core_0(Input_data_core_0, Temp_data[2]);
     Differentiate(Temp_data[2], Temp_data[3]);
