@@ -79,8 +79,11 @@ void Check_data(unsigned char *Data, unsigned int Size)
     if (File == NULL)
         Exit_with_error("fopen for Check_data failed");
 
+    if (Size == 0)
+        Exit_with_error("fclose for Check_data failed, Size==0");
+
     if (fread(Data_golden, 1, Size, File) != Size)
-        Exit_with_error("fread for Check_data failed");
+        Exit_with_error("fread for Check_data failed, Different Size");
 
     if (fclose(File) != 0)
         Exit_with_error("fclose for Check_data failed");
