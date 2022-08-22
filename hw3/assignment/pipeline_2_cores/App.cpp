@@ -61,11 +61,12 @@ int main()
   if (Output_data == NULL)
     Exit_with_error("malloc failed at main for Output_data");
 
-  unsigned char temp_data[STAGES - 1][FRAME_SIZE], *aux[STAGES - 1], **Temp_data;
-  Temp_data = (unsigned char **)aux;
+  unsigned char buffer[STAGES - 1][FRAME_SIZE];
+  unsigned char *Temp_data[STAGES - 1];
+
   for (int i = 0; i < STAGES - 1; i++)
   {
-    aux[i] = (unsigned char *)temp_data + i * FRAME_SIZE;
+    Temp_data[i] = buffer[i];
   }
 
   Load_data(Input_data);
