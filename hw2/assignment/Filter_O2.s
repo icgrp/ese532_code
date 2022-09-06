@@ -42,7 +42,7 @@ Filter_horizontal:
     madd    w1, w3, w2, w1          
     bne .L4                         
     lsr w1, w1, 8                   
-    strb    w1, [x6], 1             
+    strb    w1, [x6], 1             ; Please pay careful attention to the addressing mode. It involves a post increment.
     add x4, x4, 1                   
     cmp x7, x6                      
     bne .L7                         
