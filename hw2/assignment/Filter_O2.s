@@ -17,12 +17,12 @@ Filter_horizontal:
 .L2:
     mov x8, 61354                   ; x8 = 61354
     mov x9, x0                      ; x9 = (Input + Y*INPUT_WIDTH + X), where Y = 0, X = 0.
-    movk    x8, 0x16d, lsl 16       ; x8 = x8 + 365 = 23981994 = INPUT_HEIGHT*(1 + OUTPUT_WIDTH)
+    movk    x8, 0x16d, lsl 16       ; x8 = x8 + 365 = 23981994 = OUTPUT_WIDTH*(1 + INPUT_HEIGHT)
     mov x0, 5994                    ; x0 = OUTPUT_WIDTH
     adrp    x5, .LANCHOR0           ; x5 = Coefficients address (part 1)
     add x7, x1, x0                  ; x7 = (Output + (Y+1)*OUTPUT_WIDTH + X), where Y = 0, X = 0.
     mov x10, x0                     ; x10 = OUTPUT_WIDTH
-    add x8, x1, x8                  ; x8 = Output + INPUT_HEIGHT*(1 + OUTPUT_WIDTH)
+    add x8, x1, x8                  ; x8 = Output + OUTPUT_WIDTH*(1 + INPUT_HEIGHT)
     add x5, x5, :lo12:.LANCHOR0     ; x5 = Coefficients address (part 2)
     mov x12, -5994                  ; x12 = -OUTPUT_WIDTH
     mov x11, 6000                   ; x11 = INPUT_WIDTH
