@@ -53,6 +53,9 @@ package/sd_card.img: $(HOST_EXE) $(XCLBIN) xrt.ini
 	       --package.sd_file xrt.ini
 
 clean:
-	-$(RM) $(HOST_EXE) *.xo *.o *.xclbin *.xclbin.sh *.xclbin.info *.xclbin.link_summary* *.compile_summary *.str
+	-$(RM) $(HOST_EXE) *.o *.xclbin *.xclbin.sh *.xclbin.info *.xclbin.link_summary* *.compile_summary *.str
 	-$(RM) *json *csv *log *summary *.json *.jou
-	-$(RMDIR) _x .Xil .ipcache package
+	-$(RMDIR) _x
+	-$(RMDIR) .Xil
+	-$(RMDIR) .ipcache
+	-$(RMDIR) package
