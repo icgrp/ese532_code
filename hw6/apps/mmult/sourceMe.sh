@@ -1,7 +1,7 @@
 #!/bin/bash
 XLXDIR='/mnt/pollux/software/xilinx/2020.2'
 # change the PLATFORM_REPO_PATHS
-export PLATFORM_REPO_PATHS=/home1/e/ese532/u96v2_sbc_base
+export PLATFORM_REPO_PATHS=/mnt/seas/home1/e/ese5320/u96v2_sbc_base
 export XILINXD_LICENSE_FILE=/mnt/pollux/software/xilinx/.Xilinx/
 #export LIBRARY_PATH=/usr/x86_64-suse-linux
 
