@@ -106,8 +106,8 @@ $(XCLBIN): $(XO)
 package/sd_card.img: $(HOST_EXE) $(XCLBIN) ./fpga/xrt.ini
 	$(VPP) --package $(VPP_OPTS) --config fpga/package.cfg $(XCLBIN) \
 		--package.out_dir package \
-        --package.sd_file $(HOST_EXE) \
-        --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/image/image.ub \
-        --package.rootfs $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/rootfs/rootfs.ext4 \
+		--package.sd_file $(HOST_EXE) \
+		--package.kernel_image $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/image/image.ub \
+		--package.rootfs $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/rootfs/rootfs.ext4 \
 		--package.sd_file $(XCLBIN) \
 		--package.sd_file ./fpga/xrt.ini
