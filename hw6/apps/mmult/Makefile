@@ -17,17 +17,11 @@ help:
 	@echo ""
 #######################################################################################
 
-# compiler tools
-XILINX_VITIS = /home/ept/tools/Xilinx/Vitis/2020.2
-XILINX_VIVADO = /home/ept/tools/Xilinx/Vivado/2020.2
-XILINX_VIVADO_HLS = $(XILINX_VITIS)/Vivado_HLS
-
 HOST_CXX ?= aarch64-linux-gnu-g++
 VPP = ${XILINX_VITIS}/bin/v++
 RM = rm -f
 RMDIR = rm -rf
 
-PLATFORM_REPO_PATHS = /home/ept/ta/ultra96/u96v2_sbc_base
 VITIS_PLATFORM = u96v2_sbc_base
 VITIS_PLATFORM_DIR = ${PLATFORM_REPO_PATHS}
 VITIS_PLATFORM_PATH = $(VITIS_PLATFORM_DIR)/u96v2_sbc_base.xpfm
@@ -38,6 +32,7 @@ LDFLAGS += -lxilinxopencl -lpthread -lrt -ldl -lcrypt -lstdc++ -L$(VITIS_PLATFOR
 
 # hardware compiler shared settings
 VPP_OPTS = --target hw
+
 
 #
 # OpenCL kernel files
@@ -65,11 +60,6 @@ $(CPU_EXE): $(CPU_OBJECTS)
 
 $(HOST_EXE): $(HOST_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	-@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/rootfs/rootfs.ext4 $(XCLBIN)
-	-@$(VPP) --package --config fpga/package.cfg \
-        --package.sd_file "$@" \
-        --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/image/image.ub \
-        --package.rootfs $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/rootfs/rootfs.ext4 $(XCLBIN)
 
 .cpp.o:
 	$(HOST_CXX) $(CXXFLAGS) -I./fpga/hls/ -I../../common -o "$@" "$<"
@@ -79,7 +69,7 @@ $(HOST_EXE): $(HOST_OBJECTS)
 #
 
 .PHONY: fpga clean
-fpga: $(XCLBIN)
+fpga: package/sd_card.img
 
 .NOTPARALLEL: clean
 
@@ -109,5 +99,15 @@ clean: clean-cpu clean-host clean-accelerators clean-package
 $(XO): fpga/hls/MMult.cpp
 	-@$(RM) $@
 	$(VPP) $(VPP_OPTS) -k mmult_fpga --compile -I"$(<D)" --config fpga/design.cfg -o"$@" "$<"
+
 $(XCLBIN): $(XO)
 	$(VPP) $(VPP_OPTS) --link --config fpga/design.cfg -o"$@" $(+)
+
+package/sd_card.img: $(HOST_EXE) $(XCLBIN) ./fpga/xrt.ini
+	$(VPP) --package $(VPP_OPTS) --config fpga/package.cfg $(XCLBIN) \
+		--package.out_dir package \
+        --package.sd_file $(HOST_EXE) \
+        --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/image/image.ub \
+        --package.rootfs $(PLATFORM_REPO_PATHS)/sw/$(VITIS_PLATFORM)/PetaLinux/rootfs/rootfs.ext4 \
+		--package.sd_file $(XCLBIN) \
+		--package.sd_file ./fpga/xrt.ini
