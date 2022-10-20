@@ -21,9 +21,9 @@ help:
 #######################################################################################
 
 # compiler tools
-XILINX_VITIS ?= /media/lilbirb/research/Xilinx/Vitis/2020.1
-XILINX_VIVADO ?= /media/lilbirb/research/Xilinx/Vivado/2020.1
-XILINX_VIVADO_HLS ?= $(XILINX_VITIS)/Vivado_HLS
+# XILINX_VITIS ?= /media/lilbirb/research/Xilinx/Vitis/2020.1
+# XILINX_VIVADO ?= /media/lilbirb/research/Xilinx/Vivado/2020.1
+# XILINX_VIVADO_HLS ?= $(XILINX_VITIS)/Vivado_HLS
 
 HOST_CXX ?= aarch64-linux-gnu-g++
 VPP ?= ${XILINX_VITIS}/bin/v++
