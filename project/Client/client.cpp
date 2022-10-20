@@ -14,18 +14,18 @@
 #include <time.h>
 
 #define PORT 8091
-#define PAYLOAD_SIZE 8192
-#define MAX_PAYLOAD_SIZE 16384
+#define BLOCKSIZE 8192
+#define MAX_BLOCKSIZE 16384
 #define HEADER 2
 #define DONE_BIT (1 << 7)
 
 void handle_input(int argc, char* argv[], int* sleep_time, char** ip,
-		char** filename, int* payload_size) {
+		char** filename, int* blocksize) {
 	int x;
 	extern char *optarg;
 	extern int optind, optopt, opterr;
 
-	while ((x = getopt(argc, argv, ":s:f:i:c:")) != -1) {
+	while ((x = getopt(argc, argv, ":s:f:i:b:")) != -1) {
 		switch (x) {
 		case 's':
 			*sleep_time = atoi(optarg);
@@ -39,9 +39,9 @@ void handle_input(int argc, char* argv[], int* sleep_time, char** ip,
 			*filename = optarg;
 			printf("filename is %s\n", *filename);
 			break;
-		case 'c':
-			*payload_size = atoi(optarg);
-			printf("payload_size is %d\n", *payload_size);
+		case 'b':
+			*blocksize = atoi(optarg);
+			printf("blocksize is %d\n", *blocksize);
 			break;
 		case ':':
 			printf("-%c without parameter\n", optopt);
@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
 	char* file = strdup("vmlinuz.tar");
 	char* ip_addr = strdup("10.10.7.1");
 	int sleep_time = 5;
-	int payload_size = PAYLOAD_SIZE;
-	handle_input(argc, argv, &sleep_time, &ip_addr, &file, &payload_size);
+	int blocksize = BLOCKSIZE;
+	handle_input(argc, argv, &sleep_time, &ip_addr, &file, &blocksize);
 
 	//
 	FILE* fp = fopen(file, "r");
@@ -84,8 +84,8 @@ int main(int argc, char* argv[]) {
 	printf("bytes_read %d\n", bytes_read);
 
 	//
-	int remainder = bytes_read % payload_size;
-	int loops = bytes_read / payload_size;
+	int remainder = bytes_read % blocksize;
+	int loops = bytes_read / blocksize;
 
 	//printf("loops %d remainder %d\n",loops,remainder);
 
@@ -124,16 +124,16 @@ int main(int argc, char* argv[]) {
 	sleep(1);
 
 	//
-	unsigned char local[MAX_PAYLOAD_SIZE + HEADER];
+	unsigned char local[MAX_BLOCKSIZE + HEADER];
 
 	// send chunk size bytes
 	for (n = 0; n < loops - 1; n++) {
 		//
-		memcpy(&local[HEADER], &buff[n * payload_size], payload_size);
+		memcpy(&local[HEADER], &buff[n * blocksize], blocksize);
 
 		//
-		char high = payload_size >> 8;
-		char low = payload_size & 0xFF;
+		char high = blocksize >> 8;
+		char low = blocksize & 0xFF;
 
 		//
 		local[0] = low;
@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
 			usleep(sleep_time);
 
 		//
-		sendto(sockfd, &local[0], payload_size + HEADER, 0,
+		sendto(sockfd, &local[0], blocksize + HEADER, 0,
 				(const struct sockaddr *) &servaddr, sizeof(servaddr));
 	}
 
@@ -152,17 +152,17 @@ int main(int argc, char* argv[]) {
 	if (remainder == 0) {
 
 		//
-		memcpy(&local[HEADER], &buff[n * payload_size], payload_size);
+		memcpy(&local[HEADER], &buff[n * blocksize], blocksize);
 
 		//
-		char high = payload_size >> 8;
-		char low = payload_size & 0xFF;
+		char high = blocksize >> 8;
+		char low = blocksize & 0xFF;
 
 		//
 		local[0] = low;
 		local[1] = high | DONE_BIT;
 
-		sendto(sockfd, &local[0], payload_size + HEADER, 0,
+		sendto(sockfd, &local[0], blocksize + HEADER, 0,
 				(const struct sockaddr *) &servaddr, sizeof(servaddr));
 		n++;
 	}
@@ -170,18 +170,18 @@ int main(int argc, char* argv[]) {
 	else {
 
 		//
-		memcpy(&local[HEADER], &buff[n * payload_size], payload_size);
+		memcpy(&local[HEADER], &buff[n * blocksize], blocksize);
 
 		//
-		char high = payload_size >> 8;
-		char low = payload_size & 0xFF;
+		char high = blocksize >> 8;
+		char low = blocksize & 0xFF;
 
 		//
 		local[0] = low;
 		local[1] = high;
 
 		//
-		sendto(sockfd, &local[0], payload_size + HEADER, 0,
+		sendto(sockfd, &local[0], blocksize + HEADER, 0,
 				(const struct sockaddr *) &servaddr, sizeof(servaddr));
 
 		n++;
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
 	if (remainder) {
 
 		//
-		memcpy(&local[HEADER], &buff[loops * payload_size], remainder);
+		memcpy(&local[HEADER], &buff[loops * blocksize], remainder);
 
 		//
 		char high = remainder >> 8;
