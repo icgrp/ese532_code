@@ -3,7 +3,7 @@
 
 static unsigned Coefficients[] = {2, 15, 62, 98, 62, 15, 2};
 
-static void Filter_horizontal(const unsigned char * Input,
+static void Filter_horizontal_SW(const unsigned char * Input,
 		                      unsigned char * Output)
 {
   int X, Y, i;
@@ -17,7 +17,7 @@ static void Filter_horizontal(const unsigned char * Input,
     }
 }
 
-static void Filter_vertical(const unsigned char * Input,
+static void Filter_vertical_SW(const unsigned char * Input,
 		                    unsigned char * Output)
 {
   int X, Y, i;
@@ -35,7 +35,7 @@ void Filter_SW(const unsigned char * Input,
 	           unsigned char * Output)
 {
   unsigned char * Temp = (unsigned char *) malloc(SCALED_FRAME_HEIGHT * OUTPUT_FRAME_WIDTH);
-  Filter_horizontal(Input, Temp);
-  Filter_vertical(Temp, Output);
+  Filter_horizontal_SW(Input, Temp);
+  Filter_vertical_SW(Temp, Output);
   free(Temp);
 }
