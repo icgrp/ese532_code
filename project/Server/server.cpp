@@ -13,7 +13,7 @@
 #define HEADER 2
 
 // basic
-int ESE532_Server::setup_server(int avg_payload_size) {
+int ESE532_Server::setup_server(int avg_blocksize) {
 
 	printf("setting up sever...\n");
 
@@ -50,7 +50,7 @@ int ESE532_Server::setup_server(int avg_payload_size) {
 	server_len = sizeof(servaddr);
 
 	//
-	payload_size = avg_payload_size;
+	blocksize = avg_blocksize;
 
 	printf("server setup complete!\n");
 
@@ -58,7 +58,7 @@ int ESE532_Server::setup_server(int avg_payload_size) {
 }
 
 int ESE532_Server::get_packet(unsigned char* buffer) {
-	int bytes_read = recvfrom(sockfd, (void *) buffer, payload_size + HEADER, 0,
+	int bytes_read = recvfrom(sockfd, (void *) buffer, blocksize + HEADER, 0,
 			(struct sockaddr *) &servaddr, &server_len);
 	packets_read++;
 	// crash
