@@ -71,8 +71,9 @@ int main(int argc, char* argv[]) {
 	server.setup_server(blocksize);
 
 	writer = pipe_depth;
+	ethernet_timer.start();
 	server.get_packet(input[writer]);
-
+	ethernet_timer.stop();
 	count++;
 
 	// get packet
