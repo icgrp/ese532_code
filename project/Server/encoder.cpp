@@ -26,9 +26,9 @@ void handle_input(int argc, char* argv[], int* blocksize) {
 	int x;
 	extern char *optarg;
 
-	while ((x = getopt(argc, argv, ":c:")) != -1) {
+	while ((x = getopt(argc, argv, ":b:")) != -1) {
 		switch (x) {
-		case 'c':
+		case 'b':
 			*blocksize = atoi(optarg);
 			printf("blocksize is set to %d optarg\n", *blocksize);
 			break;
