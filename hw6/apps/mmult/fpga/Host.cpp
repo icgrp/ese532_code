@@ -94,10 +94,10 @@ int main(int argc, char *argv[])
     // ------------------------------------------------------------------------------------
 
     timer2.add("Running kernel");
-    std::vector<cl::Event> write_events;
+    std::vector<cl::Event> read_events;
     for (int i = 0; i < NUM_TESTS; i++)
     {
-        std::vector<cl::Event> exec_events, read_events;
+        std::vector<cl::Event> exec_events, write_events;
         cl::Event write_ev, exec_ev, read_ev;
 
         krnl_mmult.setArg(0, a_buf[i%NUM_MAT]);
@@ -109,9 +109,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            q.enqueueMigrateMemObjects({a_buf[i%NUM_MAT], b_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, &write_events,
-            &write_ev);
-            write_events.pop_back();
+            q.enqueueMigrateMemObjects({a_buf[i%NUM_MAT], b_buf[i%NUM_MAT]}, 0 /* 0 means from host*/, &read_events, &write_ev);
+            read_events.pop_back();
         }
 
         write_events.push_back(write_ev);
