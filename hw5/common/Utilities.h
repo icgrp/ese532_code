@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <CL/cl2.hpp>
+#include <CL/opencl.hpp>
 #include "Constants.h"
 #include "EventTimer.h"
 
