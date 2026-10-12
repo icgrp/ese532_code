@@ -22,7 +22,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <stdio.h>
-#include <CL/cl2.hpp>
+#include <CL/opencl.hpp>
 #include "EventTimer.h"
 
 // When creating a buffer with user pointer (CL_MEM_USE_HOST_PTR), under the
