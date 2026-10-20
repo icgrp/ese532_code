@@ -111,7 +111,7 @@ package/sd_card.img: $(HOST_EXE) $(XCLBIN) ./fpga/xrt.ini
 		--package.dtb $(PLATFORM_REPO_PATHS)/sw/u96v2_sbc_base/linux_domain/image/system.dtb \
 		--package.rootfs ${PLATFORM_REPO_PATHS}/sw/u96v2_sbc_base/linux_domain/rootfs/rootfs.ext4 \
 		--package.sd_file $(XCLBIN) \
-		--package.sd_file xrt.ini
+		--package.sd_file ./fpga/xrt.ini
 
 sd_card_base:
 	$(VPP) --package $(VPP_OPTS) --config ./u96_v2.cfg $(XCLBIN) \
