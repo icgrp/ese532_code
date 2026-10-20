@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
@@ -92,7 +93,7 @@ int main(int Parameter_count, char * Parameters[])
 
     if ((Header & 1) == 0)
     {
-      int Chunk_size = Header >> 1;
+      uint32_t Chunk_size = Header >> 1;
       const std::string & Chunk = Decompress(Chunk_size);
       Chunks.push_back(Chunk);
       std::cout << "Decompressed chunk of size " << Chunk.length() << ".\n";
@@ -100,7 +101,7 @@ int main(int Parameter_count, char * Parameters[])
     }
     else
     {
-     int Location = Header >> 1;
+      uint32_t Location = Header >> 1;
       if (Location<Chunks.size()) {  // defensive programming to avoid out-of-bounds reference
           const std::string & Chunk = Chunks[Location];
           std::cout << "Found chunk of size " << Chunk.length() << " in database.\n";
