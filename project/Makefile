@@ -24,9 +24,6 @@ help:
 #######################################################################################
 
 # compiler tools
-# XILINX_VITIS ?= /media/lilbirb/research/Xilinx/Vitis/2020.1
-# XILINX_VIVADO ?= /media/lilbirb/research/Xilinx/Vivado/2020.1
-# XILINX_VIVADO_HLS ?= $(XILINX_VITIS)/Vivado_HLS
 
 HOST_CXX ?= aarch64-linux-gnu-g++
 VPP ?= ${XILINX_VITIS}/bin/v++
@@ -38,14 +35,14 @@ VITIS_PLATFORM_DIR = ${PLATFORM_REPO_PATHS}
 VITIS_PLATFORM_PATH = $(VITIS_PLATFORM_DIR)/u96v2_sbc_base.xpfm
 
 # host compiler global settings
-CXXFLAGS += -march=armv8-a+simd -mtune=cortex-a53 -std=c++11 -DVITIS_PLATFORM=$(VITIS_PLATFORM) -D__USE_XOPEN2K8 -I$(XILINX_VIVADO)/include/ -I$(VITIS_PLATFORM_DIR)/sw/u96v2_sbc_base/PetaLinux/sysroot/aarch64-xilinx-linux/usr/include/xrt/ -O3 -g -Wall -c -fmessage-length=0 --sysroot=$(VITIS_PLATFORM_DIR)/sw/u96v2_sbc_base/PetaLinux/sysroot/aarch64-xilinx-linux
-LDFLAGS += -lxilinxopencl -lpthread -lrt -ldl -lcrypt -lstdc++ -L$(VITIS_PLATFORM_DIR)/sw/u96v2_sbc_base/PetaLinux/sysroot/aarch64-xilinx-linux/usr/lib/ --sysroot=$(VITIS_PLATFORM_DIR)/sw/u96v2_sbc_base/PetaLinux/sysroot/aarch64-xilinx-linux
+CXXFLAGS += -march=armv8-a+simd -mtune=cortex-a53 -std=c++11 -DVITIS_PLATFORM=$(VITIS_PLATFORM) -D__USE_XOPEN2K8 -I$(XILINX_VIVADO)/include/ -I$(VITIS_PLATFORM_DIR)/sw/$(VITIS_PLATFORM)/linux_domain/sysroot/cortexa72-cortexa53-xilinx-linux/usr/include/xrt/ -O3 -g -Wall -c -fmessage-length=0 --sysroot=$(VITIS_PLATFORM_DIR)/sw/$(VITIS_PLATFORM)/linux_domain/sysroot/cortexa72-cortexa53-xilinx-linux
+LDFLAGS += -lxilinxopencl -lpthread -lrt -ldl -lcrypt -lstdc++ -L$(VITIS_PLATFORM_DIR)/sw/$(VITIS_PLATFORM)/linux_domain/sysroot/cortexa72-cortexa53-xilinx-linux/usr/lib/ --sysroot=$(VITIS_PLATFORM_DIR)/sw/$(VITIS_PLATFORM)/linux_domain/sysroot/cortexa72-cortexa53-xilinx-linux
 
 # hardware compiler shared settings
 VPP_OPTS = --target hw
 
 #
-# OpenCL kernel files
+# OpenCL kernel files (example)
 #
 # XO := kernel.xo
 # XCLBIN := kernel.xclbin
@@ -67,15 +64,6 @@ DECODER_SOURCES = Decoder/Decoder.cpp
 DECODER_OBJECTS =$(DECODER_SOURCES:.cpp=.o)
 DECODER_EXE = decoder
 
-# CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
-# CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
-# CPU_EXE = mmult_cpu
-
-# .PHONY: cpu
-# cpu: $(CPU_EXE)
-
-# $(CPU_EXE): $(CPU_OBJECTS)
-# 	$(HOST_CXX) -I./fpga/hls/ -o "$@" $(+) $(LDFLAGS)
 all: $(CLIENT_EXE) $(SERVER_EXE) $(DECODER_EXE)
 
 $(CLIENT_EXE) $(CLIENT_EXE_MAC): $(CLIENT_SOURCES)
@@ -83,8 +71,6 @@ $(CLIENT_EXE) $(CLIENT_EXE_MAC): $(CLIENT_SOURCES)
 
 $(SERVER_EXE): $(SERVER_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
-	# -@echo $(VPP) --package --config fpga/package.cfg --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
-	# -@$(VPP) --package --config fpga/package.cfg --package.sd_file "$@" --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/image/image.ub --package.rootfs $(PLATFORM_REPO_PATHS)/sw/ese532_hw6_pfm/linux_domain/rootfs/rootfs.ext4 $(XCLBIN)
 
 $(DECODER_EXE): $(DECODER_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
@@ -96,35 +82,24 @@ $(DECODER_EXE): $(DECODER_OBJECTS)
 # primary build targets
 #
 
-# .PHONY: fpga clean
-# fpga: $(XCLBIN)
-
 .NOTPARALLEL: clean
-
-clean:
-	-$(RM) $(SERVER_EXE) $(SERVER_OBJECTS) $(DECODER_EXE) $(DECODER_OBJECTS) $(CLIENT_EXE) $(CLIENT_EXE_MAC)
-
-# clean-cpu:
-# 	-$(RM) $(CPU_EXE) $(CPU_OBJECTS) 
-
-# clean-host:
-# 	-$(RM) $(HOST_EXE) $(HOST_OBJECTS) 
 
 # clean-accelerators:
 # 	-$(RM) $(XCLBIN) $(XO) $(ALL_MESSAGE_FILES)
 # 	-$(RM) *.xclbin.sh *.xclbin.info *.xclbin.link_summary* *.compile_summary
-# 	-$(RMDIR) .Xil fpga/hls/proj_mmult
+# 	-$(RMDIR) .Xil
 
 # clean-package:
 # 	-${RMDIR} package
 # 	-${RMDIR} package.build
 
-# clean: clean-cpu clean-host clean-accelerators clean-package
+clean: # clean-accelerators clean-package
+	-$(RM) $(SERVER_EXE) $(SERVER_OBJECTS) $(DECODER_EXE) $(DECODER_OBJECTS) $(CLIENT_EXE) $(CLIENT_EXE_MAC)
 # 	-$(RM) *.log *.package_summary
 # 	-${RMDIR} _x .ipcache
 
 #
-# binary container: kernel.xclbin
+# binary container: kernel.xclbin (example)
 #
 
 # $(XO): fpga/hls/MMult.cpp
@@ -133,3 +108,12 @@ clean:
 # $(XCLBIN): $(XO)
 # 	$(VPP) $(VPP_OPTS) --link --config fpga/design.cfg -o"$@" $(+)
 
+# package/sd_card.img: $(SERVER_EXE) $(XCLBIN) xrt.ini
+# 	$(VPP) --package $(VPP_OPTS) --config ./u96_v2.cfg $(XCLBIN) \
+# 	       --package.out_dir package \
+# 	       --package.sd_file $(SERVER_EXE)\
+# 	       --package.kernel_image $(PLATFORM_REPO_PATHS)/sw/u96v2_sbc_base/linux_domain/image/Image \
+# 	       --package.dtb $(PLATFORM_REPO_PATHS)/sw/u96v2_sbc_base/linux_domain/image/system.dtb \
+# 	       --package.rootfs ${PLATFORM_REPO_PATHS}/sw/u96v2_sbc_base/linux_domain/rootfs/rootfs.ext4 \
+# 	       --package.sd_file $(XCLBIN) \
+# 	       --package.sd_file xrt.ini
