@@ -1,4 +1,16 @@
 # Use Mac as the Client
-We have a specific client source file and a rule, 'make client_mac', for people who use Mac as the runtime machine. The name of the executable file is changed to 'client_mac' instead of 'client' because it will overwrite the 'Client' folder if they are in the same directory.  
 
-client.cpp should be compiled on the runtime machine. That means if you are using Mac to connect to the board with serial and Ethernet, you should run 'make client_mac' on your Mac and the rest of 'make' commands on the biglab machine. 
+Compile the client on the machine that will run it. If you use a Mac to connect
+to the board over serial and Ethernet, run these commands on your Mac from the
+`project` directory:
+
+```sh
+make client_mac
+./client_mac -i 10.10.7.1 -f LittlePrince.txt
+```
+
+The executable is named `client_mac` to avoid a collision between `client` and
+the `Client` directory on case-insensitive macOS filesystems. On Linux, use
+`make client` to build the `client` executable.
+
+`make clean` removes both client executable names along with the other generated files.

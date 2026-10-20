@@ -102,11 +102,24 @@ int main(int argc, char* argv[]) {
 
 	memset(&servaddr, 0, sizeof(servaddr));
 
+#ifdef __APPLE__
+	// macOS requires setting these socket options separately.
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
+		perror("setsockopt SO_REUSEADDR");
+		exit(EXIT_FAILURE);
+	}
+
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt))) {
+		perror("setsockopt SO_REUSEPORT");
+		exit(EXIT_FAILURE);
+	}
+#else
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
 			sizeof(opt))) {
 		perror("sockopt");
 		exit(EXIT_FAILURE);
 	}
+#endif
 
 	bzero(&servaddr, sizeof(servaddr));
 	// Filling server information

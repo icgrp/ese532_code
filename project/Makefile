@@ -10,7 +10,7 @@ help:
 	@echo "      Command to build client."
 	@echo ""
 	@echo "  make client_mac"
-	@echo "      Command to build client for mac."
+	@echo "      Command to build client on macOS from the shared client source."
 	@echo ""
 	@echo "  make encoder "
 	@echo "      Command to build encoder."
@@ -56,8 +56,7 @@ VPP_OPTS = --target hw
 #
 CLIENT_SOURCES = Client/client.cpp
 CLIENT_EXE = client
-
-CLIENT_SOURCES_MAC = Client/client-mac.cpp
+# Avoid a name collision with the Client directory on macOS.
 CLIENT_EXE_MAC = client_mac
 
 SERVER_SOURCES = Server/encoder.cpp Server/server.cpp
@@ -79,11 +78,8 @@ DECODER_EXE = decoder
 # 	$(HOST_CXX) -I./fpga/hls/ -o "$@" $(+) $(LDFLAGS)
 all: $(CLIENT_EXE) $(SERVER_EXE) $(DECODER_EXE)
 
-$(CLIENT_EXE):
+$(CLIENT_EXE) $(CLIENT_EXE_MAC): $(CLIENT_SOURCES)
 	g++ -O3 $(CLIENT_SOURCES) -o "$@"
-
-$(CLIENT_EXE_MAC):
-	g++ -O3 $(CLIENT_SOURCES_MAC) -o "$@"
 
 $(SERVER_EXE): $(SERVER_OBJECTS)
 	$(HOST_CXX) -o "$@" $(+) $(LDFLAGS)
@@ -106,7 +102,7 @@ $(DECODER_EXE): $(DECODER_OBJECTS)
 .NOTPARALLEL: clean
 
 clean:
-	-$(RM) $(SERVER_EXE) $(SERVER_OBJECTS) $(DECODER_EXE) $(DECODER_OBJECTS) $(CLIENT_EXE) 
+	-$(RM) $(SERVER_EXE) $(SERVER_OBJECTS) $(DECODER_EXE) $(DECODER_OBJECTS) $(CLIENT_EXE) $(CLIENT_EXE_MAC)
 
 # clean-cpu:
 # 	-$(RM) $(CPU_EXE) $(CPU_OBJECTS) 
