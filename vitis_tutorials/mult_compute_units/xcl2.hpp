@@ -50,7 +50,7 @@
     exit(EXIT_FAILURE);                                                        \
   }
 
-#include <CL/cl2.hpp>
+#include <CL/opencl.hpp>
 #include <CL/cl_ext_xilinx.h>
 #include <fstream>
 #include <iostream>
